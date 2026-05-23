@@ -4,11 +4,12 @@ from datetime import datetime, timedelta, timezone
 from flask import Flask
 from dotenv import load_dotenv
 from models import db, User, Subscription, Transaction, UserDocument
+import bcrypt
 
 # Load environment variables
 load_dotenv()
-MONGO_URI = os.getenv("MONGO_URI")
-DB_NAME = os.getenv("DB_NAME", "intellifin_db")
+mongo_uri = os.getenv("MONGO_URI")
+db_name = os.getenv("DB_NAME", "intellifin_db")
 
 def seed_database():
     # Clear existing data 
@@ -18,13 +19,15 @@ def seed_database():
     Subscription.objects.delete()
     #UserDocument.objects.delete()
 
+    plain_password = "password123"
+    hashed_password = bcrypt.hashpw(plain_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     # Instantiate and save a user
     print("Creating users...")
     user = User(
         first_name="Mei Leng",
         last_name="Tan",
         username="meileng_dev",
-        password="pbkdf2:sha256:600000$dummyhash"
+        password=hashed_password
     )
     user.save()
 
@@ -122,8 +125,8 @@ if __name__ == "__main__":
     
     # Configure MongoDB connection
     app.config["MONGODB_SETTINGS"] = {
-        "host": MONGO_URI,
-        "db": DB_NAME,
+        "host": mongo_uri,
+        "db": db_name,
     }
     
     db.init_app(app)

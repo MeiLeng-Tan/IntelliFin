@@ -1,0 +1,24 @@
+info:
+  name: SignUp
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://127.0.0.1:5000/api/auth/signup
+  body:
+    type: json
+    data: |-
+      {
+        "first_name": "ML",
+        "last_name": "Tan",
+        "username": "tml",
+        "password": "123456"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

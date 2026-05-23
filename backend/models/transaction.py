@@ -21,7 +21,7 @@ class Transaction(Document):
     amount = FloatField(required=True)
     method = StringField(required=True, choices=['cash', 'credit_card', 'bank_transfer'])
     currency = StringField(required=True, default='SGD', max_length=3)
-    category = StringField(required=True, choices=['food', 'transaport', 'utilities', 'others'])
+    category = StringField(required=True, choices=['food', 'transport', 'utilities', 'others'])
     created_at = DateTimeField(default=lambda: datetime.now(timezone.utc))
     updated_at = DateTimeField(default=lambda: datetime.now(timezone.utc))
 
