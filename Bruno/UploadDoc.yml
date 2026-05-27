@@ -1,0 +1,24 @@
+info:
+  name: UploadDoc
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://127.0.0.1:5000/api/documents/upload
+  body:
+    type: multipart-form
+    data:
+      - name: file
+        type: file
+        value:
+          - /Users/tanmeileng/Downloads/dummy_statement.pdf
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExMTA0Y2EzMzBkOThlMmNlNjY5NzU3IiwiZXhwIjoxNzc5OTYwMTM5fQ.Xm-sRc5udy34hvNuSSUyxzC6alYIGubdojFTHQmgibM
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

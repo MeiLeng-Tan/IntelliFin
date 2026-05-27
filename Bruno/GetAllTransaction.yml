@@ -8,7 +8,7 @@ http:
   url: http://127.0.0.1:5000/api/transactions
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExMTA0Y2EzMzBkOThlMmNlNjY5NzU3IiwiZXhwIjoxNzc5NjMzNjYwfQ.A7LiMhcUQFEto1wnyKveVEIKDZPoEdMd6iZQAPO934A
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExNmY4MGIyZTA0YTQzN2QxNTZiODE2IiwiZXhwIjoxNzc5OTc2NjQ2fQ.K7ONXKO3h0Asv5DcfGX4OSUoZHSWhRKzMRYeHLuEBCs
 
 settings:
   encodeUrl: true

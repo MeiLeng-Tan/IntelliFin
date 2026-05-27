@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_cors import CORS
 from mongoengine import connect
-from routes import auth_bp, transactions_bp
+from routes import auth_bp, transactions_bp, documents_bp
 
 def create_app():
     app = Flask(__name__)
@@ -18,6 +18,7 @@ def create_app():
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(transactions_bp, url_prefix='/api/transactions')
+    app.register_blueprint(documents_bp, url_prefix='/api/documents')
     
     @app.route('/', methods=['GET'])
     def index():
