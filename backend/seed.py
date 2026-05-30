@@ -1,15 +1,22 @@
 import os
 import random
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from flask import Flask
 from dotenv import load_dotenv
-from models import db, User, Subscription, Transaction, UserDocument
 import bcrypt
+from qdrant_client import QdrantClient
+
+from models import db, User, Subscription, Transaction, UserDocument
+from services import sync_transaction_to_qdrant
 
 # Load environment variables
 load_dotenv()
 mongo_uri = os.getenv("MONGO_URI")
 db_name = os.getenv("DB_NAME", "intellifin_db")
+qdrant_url = os.getenv("QDRANT_URL")
+qdrant_api_key = os.getenv("QDRANT_API_KEY")
+qdrant_collection = os.getenv("QDRANT_COLLECTION")
 
 def seed_database():
     # Clear existing data 
@@ -18,24 +25,32 @@ def seed_database():
     Transaction.objects.delete()
     Subscription.objects.delete()
     #UserDocument.objects.delete()
+    # Clear vector database
+    client = QdrantClient(
+        url=qdrant_url,
+        api_key=qdrant_api_key
+    )
+    if client.collection_exists(qdrant_collection):
+        print("Clearing existing Qdrant collections")
+        client.delete_collection(qdrant_collection)
 
     plain_password = "123456"
-    hashed_password = bcrypt.hashpw(plain_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    hashed_password = bcrypt.hashpw(plain_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     # Instantiate and save a user
     users = [
-        {"first_name": "Mei Leng", "last_name": "Tan", "username": "tml", "password": hashed_password},
-        {"first_name": "Marcus", "last_name": "Lim", "username": "marcus", "password": hashed_password},
-        {"first_name": "Sarah", "last_name": "Tan", "username": "sarah", "password": hashed_password},
-        {"first_name": "Florian", "last_name": "Beeres", "username": "florian", "password": hashed_password},
-        {"first_name": "Kavitha", "last_name": "Almeida", "username": "kavitha", "password": hashed_password},
+        {"first_name": "Mei Leng", "last_name": "Tan", "username": "tml"},
+        {"first_name": "Marcus", "last_name": "Lim", "username": "marcus"},
+        {"first_name": "Sarah", "last_name": "Tan", "username": "sarah"},
+        {"first_name": "Florian", "last_name": "Beeres", "username": "florian"},
+        {"first_name": "Kavitha", "last_name": "Almeida", "username": "kavitha"},
     ]
 
     subscriptions = [
-        {"name": "Netflix Premium", "fee": 22.98, "currency": "SGD", "billing_cycle": "monthly"},
-        {"name": "Spotify Family", "fee": 17.98, "currency": "SGD", "billing_cycle": "monthly"},
-        {"name": "YouTube Premium", "fee": 13.98, "currency": "SGD", "billing_cycle": "monthly"},
-        {"name": "Gym Membership", "fee": 95.00, "currency": "SGD", "billing_cycle": "monthly"},
-        {"name": "iCloud+ 2TB", "fee": 14.98, "currency": "USD", "billing_cycle": "monthly"}
+        {"name": "Netflix Premium", "fee": 22.98, "currency": "SGD", "billing_cycle": "monthly", "category": "entertainment"},
+        {"name": "Spotify Family", "fee": 17.98, "currency": "SGD", "billing_cycle": "monthly", "category": "entertainment"},
+        {"name": "YouTube Premium", "fee": 13.98, "currency": "SGD", "billing_cycle": "monthly", "category": "entertainment"},
+        {"name": "Gym Membership", "fee": 95.00, "currency": "SGD", "billing_cycle": "monthly", "category": "fitness"},
+        {"name": "iCloud+ 2TB", "fee": 14.98, "currency": "USD", "billing_cycle": "monthly", "category": "software"}
     ]
 
     categories = ["food", "transport", "utilities", "others"]
@@ -63,13 +78,15 @@ def seed_database():
 
         for sub in chosen_subscription:
             sub_record = Subscription(
-                user_id=new_user, 
+                user_id=new_user.id, 
                 name=sub["name"],
-                fee=sub["fee"],
+                fee=Decimal(str(sub["fee"])),
                 currency=sub["currency"],
                 billing_cycle=sub["billing_cycle"],
                 next_billing_date = datetime.now(timezone.utc) + timedelta(days=30),
                 is_active=True,
+                payment_method="credit_card",
+                category=sub["category"],
                 created_at=datetime.now(timezone.utc) - timedelta(days=60)
             )
             sub_record.save()
@@ -77,29 +94,31 @@ def seed_database():
             # Add transactions linked to the subscription model
             for i in range(2):
                 past_date = datetime.now(timezone.utc) - timedelta(days=30 * i + 2)
-                Transaction(
-                    user_id=new_user,
+                tx_sub = Transaction(
+                    user_id=new_user.id,
                     date=past_date,
-                    type="expense",
+                    type="expenses",
                     description=f"{sub["name"]} Subscription",
-                    amount=sub["fee"],
+                    amount=Decimal(str(sub["fee"])),
                     method="credit_card",
                     currency=sub["currency"],
                     category="subscription",
-                    subscription_id=sub_record,
+                    subscription_id=sub_record.id,
                     created_at=past_date,
                     updated_at=past_date
-                ).save()
+                )
+                tx_sub.save()
+                sync_transaction_to_qdrant(tx_sub)
 
         # Generate 15 randomized transaction
         for _ in range(15):
             category = random.choice(categories)
-            t_type = "expense" if random.random() > 0.15 else "income"
+            t_type = "expenses" if random.random() > 0.15 else "incomes"
             
-            if t_type == "income":
+            if t_type == "incomes":
                 description = "Salary Paycheck" if random.random() > 0.5 else "Freelance Payout"
                 amount = round(random.uniform(500, 4000), 2)
-                category = "others"
+                category = "paycheck"
                 method = "bank_transfer"
             else:
                 description = random.choice(descriptions[category])
@@ -109,19 +128,22 @@ def seed_database():
             random_days_ago = random.randint(0, 30)
             t_date = datetime.now(timezone.utc) - timedelta(days=random_days_ago)
 
-            Transaction(
-                user_id=new_user,
+            tx = Transaction(
+                user_id=new_user.id,
                 date=t_date,
                 type=t_type,
                 description=description,
-                amount=amount,
+                amount=Decimal(str(amount)),
                 method=method,
                 currency="SGD",
                 category=category,
                 subscription_id=None,
                 created_at=t_date,
                 updated_at=t_date
-            ).save()
+            )
+            tx.save()
+
+            sync_transaction_to_qdrant(tx)
 
     print(f"\n[SUCCESS] Database seeding complete!")
 

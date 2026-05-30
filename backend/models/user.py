@@ -9,7 +9,7 @@ class User(Document):
     """
     Define user collection schema
     """
-    meta = {'collection': 'users'}
+    meta = {"collection": "users"}
 
     first_name = StringField(required=True, max_length=50)
     last_name = StringField(required=True, max_length=50)

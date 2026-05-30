@@ -11,6 +11,7 @@ from qdrant_client import QdrantClient
 load_dotenv()
 qdrant_url = os.getenv("QDRANT_URL")
 qdrant_api_key = os.getenv("QDRANT_API_KEY")
+qdrant_collection = os.getenv("QDRANT_COLLECTION")
 
 if qdrant_url and qdrant_api_key:
     client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
@@ -60,9 +61,44 @@ def ingest_document(file_bytes, filename, user_id):
         texts=chunks,
         embedding=embeddings,
         metadatas=metadatas,
-        collection_name="financial_knowledge_base",
+        collection_name=qdrant_collection,
         url=qdrant_url,
         api_key=qdrant_api_key
     )
 
     return len(chunks)
+
+def sync_transaction_to_qdrant(transaction):
+    """
+    Converts transaction into descriptive paragraph for RAG context.
+    """
+    tx_type = getattr(transaction, "type", "expenses").lower()
+
+    if tx_type == "incomes":
+        action_phrase = f"received ${transaction.amount:,.2f} of income from"
+    else:
+        action_phrase = f"spent ${transaction.amount:,.2f} on item"
+
+    narrative_text = (
+        f"Transaction Record: User {action_phrase} '{transaction.description}'."
+        f"This transaction categorized under '{transaction.category}' "
+        f"and logged via {transaction.source}."
+    )
+
+    metadata = {
+        "user_id": str(transaction.user_id),
+        "doc_type": "transaction",
+        "transaction_type": tx_type,
+        "transaction_id": str(transaction.id),
+        "source": transaction.source
+    }
+
+    # Append the transaction vector to collection
+    QdrantVectorStore.from_texts(
+        texts=[narrative_text],
+        embedding=embeddings,
+        metadatas=[metadata],
+        collection_name="financial_knowledge_base",
+        url=qdrant_url,
+        api_key=qdrant_api_key
+    )

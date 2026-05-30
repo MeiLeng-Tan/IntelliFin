@@ -14,8 +14,8 @@ def token_required(f):
         token = None
 
         # Check the "Authorization" Bearer <token>" format"
-        if 'Authorization' in request.headers:
-            auth_header = request.headers['Authorization']
+        if "Authorization" in request.headers:
+            auth_header = request.headers["Authorization"]
             if auth_header.startswith("Bearer"):
                 token = auth_header.split(" ")[1]
         
@@ -24,9 +24,9 @@ def token_required(f):
         
         try:
             # Decode payload
-            payload = jwt.decode(token, jwt_secret, algorithms=['HS256'])
+            payload = jwt.decode(token, jwt_secret, algorithms=["HS256"])
             # Check that user actually existed
-            current_user = User.objects(id=payload['user_id']).first()
+            current_user = User.objects(id=payload["user_id"]).first()
             if not current_user:
                 return jsonify({"error": "User session profile invalid"}), 401
         except jwt.ExpiredSignatureError:

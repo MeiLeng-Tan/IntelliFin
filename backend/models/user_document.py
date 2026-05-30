@@ -9,10 +9,10 @@ class UserDocument(Document):
     """
     Define subscription collection schema
     """
-    meta = {'collection': 'documents'}
+    meta = {"collection": "documents"}
     
     # Pass reference class name as string
-    user_id = ReferenceField('User', reverse_delete_rule=CASCADE, required=True)
+    user_id = ReferenceField("User", reverse_delete_rule=CASCADE, required=True)
     
     filename = StringField(required=True, max_length=255)
     file_type = StringField(required=True, max_length=10)
