@@ -97,7 +97,7 @@ def seed_database():
                 tx_sub = Transaction(
                     user_id=new_user.id,
                     date=past_date,
-                    type="expenses",
+                    type="expense",
                     description=f"{sub["name"]} Subscription",
                     amount=Decimal(str(sub["fee"])),
                     method="credit_card",
@@ -113,9 +113,9 @@ def seed_database():
         # Generate 15 randomized transaction
         for _ in range(15):
             category = random.choice(categories)
-            t_type = "expenses" if random.random() > 0.15 else "incomes"
+            t_type = "expense" if random.random() > 0.15 else "income"
             
-            if t_type == "incomes":
+            if t_type == "income":
                 description = "Salary Paycheck" if random.random() > 0.5 else "Freelance Payout"
                 amount = round(random.uniform(500, 4000), 2)
                 category = "paycheck"

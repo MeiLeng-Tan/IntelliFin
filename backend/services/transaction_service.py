@@ -3,7 +3,7 @@ from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 from models import Subscription
 
-def handle_subscription_linking(current_user_id, description, amount, tx_date, category, inferred_cycle):
+def handle_subscription_linking(current_user_id, description, amount, currency, tx_date, category, inferred_cycle):
     """
     Check for subscription categories, find or create the subscription database and return its ID
     """
@@ -18,6 +18,7 @@ def handle_subscription_linking(current_user_id, description, amount, tx_date, c
 
     if existing_sub:
         existing_sub.fee = Decimal(str(amount))
+        existing_sub.currency = currency.upper()
         existing_sub.save()
         return existing_sub
     
@@ -41,7 +42,7 @@ def handle_subscription_linking(current_user_id, description, amount, tx_date, c
         user_id=current_user_id,
         name=description.strip(),
         fee=Decimal(str(amount)),
-        currency="SGD", 
+        currency=currency.upper(), 
         billing_cycle=billing_cycle,
         next_billing_date=next_billing_date,
         is_active=True

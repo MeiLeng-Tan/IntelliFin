@@ -57,6 +57,7 @@ def create_manual_entry(current_user):
             current_user_id=current_user.id,
             description=data["description"],
             amount=data["amount"],
+            currency=data["currency"],
             tx_date=datetime.now(timezone.utc),
             category=category,
             inferred_cycle=data.get("billing_cycle", "monthly")
@@ -105,8 +106,14 @@ def parse_statement(current_user):
         
         # OpenAI structured output schema
         schema = {
+            "title": "TransactionExtractor", 
+            "description": "Extract financial items from a statement text layer",
             "type": "object",
             "properties": {
+                "statement_currency": {
+                    "type": "string",
+                    "description": "The overall currency of the account statment (e.g. USD, SGD, MYR). Look at headers or summary blocks."
+                },
                 "transactions": {
                     "type": "array",
                     "items": {
@@ -114,19 +121,22 @@ def parse_statement(current_user):
                         "properties": {
                             "date": {"type": "string"},
                             "description": {"type": "string"},
-                            "amount": {"type": "number"},
+                            "amount": {"type": "number", "description": "The absolute positive numberic value of the transaction"},
+                            "type": {"type": "string", "enum": ["income", "expense"], "description": "Identify if this transaction is an income/deposit or an expense/withdrawal"},
                             "category": {"type": "string"},
                             "inferred_billing_cycle": {"type": "string", "enum": ["weekly", "monthly", "quarterly", "annual"]}
                         },
-                        "required": ["date", "description", "amount", "category", "inferred_billing_cycle"]
+                        "required": ["date", "description", "amount", "type", "category", "inferred_billing_cycle"]
                     }
                 }
             },
-            "required": ["transactions"]
+            "required": ["statement_currency", "transactions"]
         }
 
         structured_llm = llm.with_structured_output(schema)
         extraction = structured_llm.invoke(f"Extract transactions:\n\n{raw_text}")
+
+        detected_currency = extraction.get("statement_currency", "SGD").upper()
 
         saved_items = []
         for item in extraction.get("transactions", []):
@@ -137,8 +147,9 @@ def parse_statement(current_user):
 
             sub_record = handle_subscription_linking(
                 current_user_id=current_user.id,
-                 description=item["description"],
+                description=item["description"],
                 amount=item["amount"],
+                currency=detected_currency,
                 tx_date=parsed_date,
                 category=item["category"],
                 inferred_cycle=item.get("inferred_billing_cycle", "monthly")
@@ -146,10 +157,12 @@ def parse_statement(current_user):
 
             tx = Transaction(
                 user_id=current_user.id,
+                type=item["type"],
+                date=parsed_date,
                 description=item["description"],
                 amount=item["amount"],
+                currency=detected_currency,
                 category="subscription" if sub_record else item["category"],
-                type="expenses",
                 method="credit_card",
                 source='statement_upload',
                 doc_name=filename,
@@ -157,7 +170,13 @@ def parse_statement(current_user):
             )
             tx.save()
             sync_transaction_to_qdrant(tx)
-            saved_items.append({"description": tx.description, "amount": float(tx.amount), "category": tx.category})
+            saved_items.append({
+                "date": tx.date.isoformat() if tx.date else None,
+                "type": tx.type,
+                "description": tx.description, 
+                "amount": float(tx.amount), 
+                "currency": tx.currency,
+                "category": tx.category})
 
         return jsonify({"message": f"Successfully parsed and synced {len(saved_items)} entries.", "data": saved_items}), 201
     

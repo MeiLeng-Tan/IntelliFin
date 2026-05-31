@@ -72,9 +72,9 @@ def sync_transaction_to_qdrant(transaction):
     """
     Converts transaction into descriptive paragraph for RAG context.
     """
-    tx_type = getattr(transaction, "type", "expenses").lower()
+    tx_type = getattr(transaction, "type", "expense").lower()
 
-    if tx_type == "incomes":
+    if tx_type == "income":
         action_phrase = f"received ${transaction.amount:,.2f} of income from"
     else:
         action_phrase = f"spent ${transaction.amount:,.2f} on item"

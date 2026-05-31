@@ -21,7 +21,7 @@ class Transaction(Document):
     subscription_id = ReferenceField("Subscription", reverse_delete_rule=NULLIFY, default=None)
     
     date = DateTimeField(required=True, default=lambda: datetime.now(timezone.utc))
-    type = StringField(required=True, choices=['incomes', 'expenses'])
+    type = StringField(required=True, choices=['income', 'expense'])
     description = StringField(required=True, max_length=255)
     amount = DecimalField(required=True, force_string=False, precision=2)
     currency = StringField(required=True, default="SGD", max_length=3)
