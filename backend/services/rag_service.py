@@ -13,7 +13,7 @@ import uuid
 load_dotenv()
 qdrant_url = os.getenv("QDRANT_URL")
 qdrant_api_key = os.getenv("QDRANT_API_KEY")
-qdrant_collection = os.getenv("QDRANT_COLLECTION")
+qdrant_collection = os.getenv("QDRANT_COLLECTION", "financial_knowledge_base")
 
 if qdrant_url and qdrant_api_key:
     client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
@@ -76,7 +76,7 @@ def ingest_document(file_bytes, filename, user_id):
     text_splitters = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     chunks = text_splitters.split_text(raw_text)
 
-    # Construct metadat blocks for security filtering, users only able to search their own uploaded document 
+    # Construct metadata blocks for security filtering, users only able to search their own uploaded document 
     metadatas = [
         {
             "user_id": str(user_id),
@@ -98,6 +98,12 @@ def sync_transaction_to_qdrant(transaction):
     """
     Converts transaction into descriptive paragraph for RAG context.
     """
+
+    if hasattr(transaction.user_id, "id"):
+        raw_user_id = str(transaction.user_id.id)
+    else:
+        raw_user_id = str(transaction.user_id)
+
     tx_type = getattr(transaction, "type", "expense").lower()
 
     if tx_type == "income":
@@ -112,7 +118,7 @@ def sync_transaction_to_qdrant(transaction):
     )
 
     metadata = {
-        "user_id": str(transaction.user_id),
+        "user_id": str(raw_user_id),
         "doc_type": "transaction",
         "transaction_type": tx_type,
         "transaction_category": str(transaction.category),
