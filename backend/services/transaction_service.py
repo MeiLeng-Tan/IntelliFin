@@ -7,7 +7,7 @@ def handle_subscription_linking(current_user_id, description, amount, currency, 
     """
     Check for subscription categories, find or create the subscription database and return its ID
     """
-    if category.lower() != "subscription":
+    if "subscription" not in category.lower():
         return None
     
     # Check if the subscription already exists for the user

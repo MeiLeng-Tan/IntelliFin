@@ -1,5 +1,6 @@
 import os
 import random
+import time
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from flask import Flask
@@ -9,6 +10,7 @@ from qdrant_client import QdrantClient
 
 from models import db, User, Subscription, Transaction, UserDocument
 from services import sync_transaction_to_qdrant
+from services.rag_service import client as qdrant_raw_client
 
 # Load environment variables
 load_dotenv()
@@ -30,10 +32,24 @@ def seed_database():
         url=qdrant_url,
         api_key=qdrant_api_key
     )
-    if client.collection_exists(qdrant_collection):
-        print("Clearing existing Qdrant collections")
-        client.delete_collection(qdrant_collection)
+    if qdrant_raw_client.collection_exists(qdrant_collection):
+        print(f"Clearing existing Qdrant collection {qdrant_collection}")
+        qdrant_raw_client.delete_collection(qdrant_collection)
+        # Wait for the cloud node cluster to complete the wipe loop
+        time.sleep(3)
 
+    from qdrant_client.http import models as qdrant_models
+    if not qdrant_raw_client.collection_exists(qdrant_collection):
+        print(f"Creating a clean {qdrant_collection} collection")
+        qdrant_raw_client.create_collection(
+            collection_name=qdrant_collection,
+            vectors_config=qdrant_models.VectorParams(
+                size=1536,
+                distance=qdrant_models.Distance.COSINE
+            )
+        )
+        time.sleep(1)
+        
     plain_password = "123456"
     hashed_password = bcrypt.hashpw(plain_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     # Instantiate and save a user

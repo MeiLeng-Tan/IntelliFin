@@ -1,2 +1,2 @@
-from .rag_service import sync_transaction_to_qdrant
+from .rag_service import sync_transaction_to_qdrant, delete_transaction_from_qdrant
 from .transaction_service import handle_subscription_linking

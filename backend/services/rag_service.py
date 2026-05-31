@@ -6,6 +6,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
+from qdrant_client.http import models as qdrant_models
+import uuid
 
 # Initialize the client
 load_dotenv()
@@ -18,7 +20,35 @@ if qdrant_url and qdrant_api_key:
 else:
     client = QdrantClient(":memory:")
 
+try:
+    if not client.collection_exists(collection_name=qdrant_collection):
+        print(f"Creating collection '{qdrant_collection}' in Qdrant cluster...")
+        client.create_collection(
+            collection_name=qdrant_collection,
+            vectors_config=qdrant_models.VectorParams(
+                size=1536, 
+                distance=qdrant_models.Distance.COSINE
+            )
+        )
+        print(f"Collection '{qdrant_collection}' created successfully.")
+except Exception as init_err:
+    print(f"Warning during Qdrant collection initialization check: {str(init_err)}")
+
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+
+# Instantiate a Vecotr Store instance
+vector_store = QdrantVectorStore(
+    client=client,
+    collection_name=qdrant_collection,
+    embedding=embeddings
+)
+
+def convert_mongo_id_to_uuid(mongo_id: str) -> str:
+    """
+    Convert MongoDB ObjectId string into a 36-characters Qdrant UUID string.
+    """
+    padded_hex = str(mongo_id).zfill(32)
+    return str(uuid.UUID(hex=padded_hex))
 
 def extract_text_from_pdf(file_bytes):
     """
@@ -57,13 +87,9 @@ def ingest_document(file_bytes, filename, user_id):
     ]
 
     # Transmit chunks and metadata to clous Qdrant collection
-    QdrantVectorStore.from_texts(
+    vector_store.add_texts(
         texts=chunks,
-        embedding=embeddings,
         metadatas=metadatas,
-        collection_name=qdrant_collection,
-        url=qdrant_url,
-        api_key=qdrant_api_key
     )
 
     return len(chunks)
@@ -89,16 +115,34 @@ def sync_transaction_to_qdrant(transaction):
         "user_id": str(transaction.user_id),
         "doc_type": "transaction",
         "transaction_type": tx_type,
+        "transaction_category": str(transaction.category),
         "transaction_id": str(transaction.id),
         "source": transaction.source
     }
 
+    qdrant_uuid = convert_mongo_id_to_uuid(str(transaction.id))
+
     # Append the transaction vector to collection
-    QdrantVectorStore.from_texts(
+    vector_store.add_texts(
         texts=[narrative_text],
-        embedding=embeddings,
         metadatas=[metadata],
-        collection_name="financial_knowledge_base",
-        url=qdrant_url,
-        api_key=qdrant_api_key
+        ids=[qdrant_uuid]
     )
+
+def delete_transaction_from_qdrant(tx_id: str) -> bool:
+    """
+    Remove a transaction vector point from Qdant cluster by its UUID string. 
+    Return true if successul, raises exception otherwise.
+    """
+    try: 
+
+        qdrant_uuid = convert_mongo_id_to_uuid(str(tx_id))
+
+        client.delete(
+            collection_name=qdrant_collection,
+            points_selector=[qdrant_uuid]
+        )
+        return True
+    except Exception as e:
+        print(f"Qdrant Vector deletion failed for ID {tx_id}: {str(e)}")
+        raise e
