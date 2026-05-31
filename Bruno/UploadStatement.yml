@@ -1,0 +1,24 @@
+info:
+  name: UploadStatement
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: http://127.0.0.1:5000/api/transactions/parse
+  body:
+    type: multipart-form
+    data:
+      - name: file
+        type: file
+        value:
+          - /Users/tanmeileng/code/ga/projects/IntelliFin/backend/test_assets/two_column_statement.pdf
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExYmUzNTE5ZDgxOWUzMDk2MmEyZDBjIiwiZXhwIjoxNzgwMzAwMzI4fQ.6hsA4RNwl8rMZtYj3JLKVeYY_9XMg54OHzojRyS-guM
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -12,10 +12,10 @@ http:
       - name: file
         type: file
         value:
-          - /Users/tanmeileng/Downloads/dummy_statement.pdf
+          - /Users/tanmeileng/Downloads/Tan Mei Leng CV.pdf
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExMTA0Y2EzMzBkOThlMmNlNjY5NzU3IiwiZXhwIjoxNzc5OTYwMTM5fQ.Xm-sRc5udy34hvNuSSUyxzC6alYIGubdojFTHQmgibM
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExMTA0Y2EzMzBkOThlMmNlNjY5NzU3IiwiZXhwIjoxNzc5OTYwMjk3fQ.L4MPGcC44eamYVLFleU6wyvMgt0MMyrOwa4bFeDEQuc
 
 settings:
   encodeUrl: true

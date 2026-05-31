@@ -1,11 +1,15 @@
 info:
-  name: GetAllTransaction
+  name: GetOneSubscription
   type: http
-  seq: 3
+  seq: 9
 
 http:
   method: GET
-  url: http://127.0.0.1:5000/api/transactions
+  url: http://127.0.0.1:5000/api/subscriptions/:sub_id
+  params:
+    - name: sub_id
+      value: 6a1c0161fcdd5ac3ae4d0219
+      type: path
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExYzAxNjFmY2RkNWFjM2FlNGQwMjE4IiwiZXhwIjoxNzgwMzI0ODI3fQ.Z9waisu4rpMTs3Xx0DpH9w7E-Ajmhg4uUVVrbXdBQWA

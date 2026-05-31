@@ -1,0 +1,35 @@
+info:
+  name: EditSubscription
+  type: http
+  seq: 11
+
+http:
+  method: PUT
+  url: http://127.0.0.1:5000/api/subscriptions/:sub_id
+  params:
+    - name: sub_id
+      value: 6a1c0161fcdd5ac3ae4d0219
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "billing_cycle": "quarterly",
+        "category": "entertainment",
+        "currency": "EUR",
+        "fee": 22.98,
+        "is_active": true,
+        "next_billing_date": "2026-06-30T09:37:37.810000",
+        "payment_method": "credit_card",
+        "subscription": "6a1c0161fcdd5ac3ae4d0219",
+        "subscription_name": "Netflix Premium"
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExYzAxNjFmY2RkNWFjM2FlNGQwMjE4IiwiZXhwIjoxNzgwMzI0ODI3fQ.Z9waisu4rpMTs3Xx0DpH9w7E-Ajmhg4uUVVrbXdBQWA
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

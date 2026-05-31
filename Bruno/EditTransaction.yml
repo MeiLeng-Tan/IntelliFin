@@ -1,0 +1,37 @@
+info:
+  name: EditTransaction
+  type: http
+  seq: 6
+
+http:
+  method: PUT
+  url: http://127.0.0.1:5000/api/transactions/:tx_id
+  params:
+    - name: tx_id
+      value: 6a1c0168fcdd5ac3ae4d0220
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "amount": 5.50,
+        "category": "food",
+        "currency": "SGD",
+        "date": "2026-05-26T09:37:44.041000",
+        "description": "Food Delivery",
+        "doc_name": null,
+        "method": "cash",
+        "source": "manual",
+        "subscription_id": null,
+        "transaction_id": "6a1c0168fcdd5ac3ae4d0220",
+        "type": "expense"
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExYzAxNjFmY2RkNWFjM2FlNGQwMjE4IiwiZXhwIjoxNzgwMzI0ODI3fQ.Z9waisu4rpMTs3Xx0DpH9w7E-Ajmhg4uUVVrbXdBQWA
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
