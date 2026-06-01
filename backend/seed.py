@@ -48,6 +48,11 @@ def seed_database():
                 distance=qdrant_models.Distance.COSINE
             )
         )
+        qdrant_raw_client.create_payload_index(
+            collection_name=qdrant_collection,
+            field_name="metadata.user_id",
+            field_schema=qdrant_models.PayloadSchemaType.KEYWORD
+        )
         time.sleep(1)
         
     plain_password = "123456"

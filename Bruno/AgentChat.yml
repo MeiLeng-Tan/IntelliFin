@@ -1,11 +1,17 @@
 info:
-  name: GetAllTransaction
+  name: AgentChat
   type: http
-  seq: 3
+  seq: 12
 
 http:
-  method: GET
-  url: http://127.0.0.1:5000/api/transactions
+  method: POST
+  url: http://127.0.0.1:5000/api/chat
+  body:
+    type: json
+    data: |-
+      {
+        "message": "What is my most recent transaction?"
+      }
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExZDM2Mjk2OTcwNjU0NDA2YjNjYWE5IiwiZXhwIjoxNzgwMzg1ODE4fQ.BmNfH9yVqe8xqD90NKUQw2xaaxCcdNn_oNW8OEFRxVk

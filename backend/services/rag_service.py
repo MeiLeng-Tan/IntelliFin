@@ -31,6 +31,12 @@ try:
             )
         )
         print(f"Collection '{qdrant_collection}' created successfully.")
+        # Create payload index 
+        client.create_payload_index(
+            collection_name=qdrant_collection,
+            field_name="metadata.user_id",
+            field_schema=qdrant_models.PayloadSchemaType.KEYWORD
+        )
 except Exception as init_err:
     print(f"Warning during Qdrant collection initialization check: {str(init_err)}")
 
