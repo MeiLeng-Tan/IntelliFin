@@ -3,7 +3,7 @@ User model schema for 'users' collection.
 """
 
 from datetime import datetime, timezone
-from mongoengine import Document, StringField, DateTimeField
+from mongoengine import Document, StringField, EmailField, DateTimeField
 
 class User(Document):
     """
@@ -13,7 +13,7 @@ class User(Document):
 
     first_name = StringField(required=True, max_length=50)
     last_name = StringField(required=True, max_length=50)
-    username = StringField(required=True, unique=True, max_length=30)
+    email = EmailField(required=True, unique=True)
     password = StringField(required=True)
     created_at = DateTimeField(default=lambda: datetime.now(timezone.utc))
     updated_at = DateTimeField(default=lambda: datetime.now(timezone.utc))
@@ -23,4 +23,4 @@ class User(Document):
         return super(User, self).save(*args, **kwargs)
 
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<User {self.email}>'

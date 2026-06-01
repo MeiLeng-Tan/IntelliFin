@@ -59,11 +59,11 @@ def seed_database():
     hashed_password = bcrypt.hashpw(plain_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     # Instantiate and save a user
     users = [
-        {"first_name": "Mei Leng", "last_name": "Tan", "username": "tml"},
-        {"first_name": "Marcus", "last_name": "Lim", "username": "marcus"},
-        {"first_name": "Sarah", "last_name": "Tan", "username": "sarah"},
-        {"first_name": "Florian", "last_name": "Beeres", "username": "florian"},
-        {"first_name": "Kavitha", "last_name": "Almeida", "username": "kavitha"},
+        {"first_name": "Mei Leng", "last_name": "Tan", "email": "tml@email.com"},
+        {"first_name": "Marcus", "last_name": "Lim", "email": "marcus@email.com"},
+        {"first_name": "Sarah", "last_name": "Tan", "email": "sarah@email.com"},
+        {"first_name": "Florian", "last_name": "Beeres", "email": "florian@email.com"},
+        {"first_name": "Kavitha", "last_name": "Almeida", "email": "kavitha@email.com"},
     ]
 
     subscriptions = [
@@ -89,7 +89,7 @@ def seed_database():
         new_user = User(
             first_name=user["first_name"],
             last_name=user["last_name"],
-            username=user["username"],
+            email=user["email"],
             password=hashed_password
         )
         new_user.save()
