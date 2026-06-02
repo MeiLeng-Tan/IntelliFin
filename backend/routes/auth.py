@@ -31,7 +31,25 @@ def signup():
             email=data["email"],
             password=hashed_password
         ).save()
-        return jsonify({"message": "User registered successfully"}), 201
+
+        # Generate JWT-token right away for auto-login
+        jwt_payload = {
+            "user_id": str(new_user.id),
+            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=24)
+        }
+        token = jwt.encode(jwt_payload, jwt_secret, algorithm="HS256")
+
+        return jsonify({
+            "message": "User registered successfully",
+            "token": token,
+            "user": {
+                "id": str(new_user.id),
+                "email": new_user.email,
+                "first_name": new_user.first_name,
+                "last_name": new_user.last_name
+            }
+        }), 201
+    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
