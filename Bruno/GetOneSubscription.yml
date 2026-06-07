@@ -8,11 +8,11 @@ http:
   url: http://127.0.0.1:5000/api/subscriptions/:sub_id
   params:
     - name: sub_id
-      value: 6a1c0161fcdd5ac3ae4d0219
+      value: 6a253ac42e361bcc8874289c
       type: path
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExYzAxNjFmY2RkNWFjM2FlNGQwMjE4IiwiZXhwIjoxNzgwMzI0ODI3fQ.Z9waisu4rpMTs3Xx0DpH9w7E-Ajmhg4uUVVrbXdBQWA
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmEyNTNhYzIyZTM2MWJjYzg4NzQyODk4IiwiZXhwIjoxNzgwOTEyODUzfQ.M4fSqQG485YpBYekCevrvfz4zxh_UOAaOZz_O2mvcnE
 
 settings:
   encodeUrl: true

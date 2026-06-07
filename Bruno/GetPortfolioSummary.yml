@@ -1,0 +1,17 @@
+info:
+  name: GetPortfolioSummary
+  type: http
+  seq: 14
+
+http:
+  method: GET
+  url: http://127.0.0.1:5000/api/portfolio/summary
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmEyNTNhYzIyZTM2MWJjYzg4NzQyODk4IiwiZXhwIjoxNzgwOTI1NTIzfQ.K1JnUf469M6xhvLIB5LbogO24yfjwS0T1WCpiCgCuHY
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

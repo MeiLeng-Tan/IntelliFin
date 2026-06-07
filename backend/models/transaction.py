@@ -21,12 +21,18 @@ class Transaction(Document):
     subscription_id = ReferenceField("Subscription", reverse_delete_rule=NULLIFY, default=None)
     
     date = DateTimeField(required=True, default=lambda: datetime.now(timezone.utc))
-    type = StringField(required=True, choices=['income', 'expense'])
+    type = StringField(required=True, choices=["income", "expense", "investment"])
     description = StringField(required=True, max_length=255)
-    amount = DecimalField(required=True, force_string=False, precision=2)
+    amount = DecimalField(required=True, precision=18, scale=2)
     currency = StringField(required=True, default="SGD", max_length=3)
     method = StringField(required=True, choices=["cash", "credit_card", "bank_transfer"])
     category = StringField(required=True, default="others")
+    # Investment specific fiels 
+    trade_action = StringField(choices=["buy", "sell"], default=None)
+    ticker = StringField(max_length=10, uppercase=True, trim=True, default=None)
+    quantity = DecimalField(precision=18, scale=8, default=0.0)
+    price_per_unit = DecimalField(precision=18, scale=4, default=0.0)
+    
     source = StringField(choices=["manual", "statement_upload"], default="manual")
     doc_name = StringField()
     created_at = DateTimeField(default=lambda: datetime.now(timezone.utc))

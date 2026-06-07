@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "../utils/cn";
+import { AnalyticsLayout } from "../features/analytics/AnalyticsLayout";
+import { PortfolioLayout } from "../features/portfolio/PortfolioLayout";
 
 interface LayoutProps {
     onLogout: () => void;
@@ -11,15 +13,15 @@ type ActiveView = "dashboard" | "portfolio" | "analytics" | "settings";
 export const Layout: React.FC<LayoutProps> = ({ onLogout }) => {
     // State to track which view is currently selected
     const [activeView, setActiveView] = useState<ActiveView>("dashboard");
-
+    
     const renderView = () => {
         switch (activeView) {
             case "dashboard":
                 return <div className="text_xl font-semibold">Dashboard Content View</div>;
             case "portfolio":
-                return <div className="text_xl font-semibold">Portfolio View</div>;
+                return <PortfolioLayout />;
             case "analytics":
-                return <div className="text_xl font-semibold">Analytics View</div>;
+                return <AnalyticsLayout />;
             case "settings":
                 return <div className="text_xl font-semibold">Settings View</div>;
             default:
@@ -51,6 +53,7 @@ export const Layout: React.FC<LayoutProps> = ({ onLogout }) => {
                         )}
                     />
                 </div>
+                
                 {/*User profile thumbnails */}
                 <div className="flex items-center gap-4">
                     <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-semibold text-sm border border-indigo-100">

@@ -11,4 +11,5 @@ db = MongoEngine()
 from .user import User
 from .subscription import Subscription
 from .transaction import Transaction
+from .investment import InvestmentPortfolio
 from .user_document import UserDocument

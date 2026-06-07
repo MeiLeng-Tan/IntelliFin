@@ -1,33 +1,53 @@
 import os
-from dotenv import load_dotenv 
-from openai import OpenAI
-from qdrant_client import QdrantClient
-from models import Transaction, Subscription
 import json
+from typing import Annotated, Sequence, TypedDict
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from dotenv import load_dotenv
+
+from langchain_core.tools import tool
+from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
+from langchain_openai import ChatOpenAI
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.checkpoint.memory import MemorySaver
+
+from qdrant_client import QdrantClient
+from models import db, Subscription, InvestmentPortfolio
 
 load_dotenv()
+
 qdrant_url = os.getenv("QDRANT_URL")
 qdrant_api_key = os.getenv("QDRANT_API_KEY")
 qdrant_collection = os.getenv("QDRANT_COLLECTION")
-openai_api_key = os.getenv("OPENAI_API_KEY")
-openai_client = OpenAI(api_key=openai_api_key)
 
 if qdrant_url and qdrant_api_key:
     qdrant_client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
 else:
     qdrant_client = QdrantClient(":memory:")
 
-def search_semantic_history(user_id: str, query: str, limit: int = 5) -> str:
+class AgentState(TypedDict):
     """
-    Search Qdrant vector store for matching contexts
+    LangGraph shared session state
     """
-    from services.rag_service import embeddings
-    from qdrant_client import models as qdrant_models
+    messages: Annotated[Sequence[BaseMessage], add_messages]
+    user_id: str
 
-    # Generate query embedding vector
+# ===== AI Agent tools 
+@tool
+def search_semantic_history(query: str, tool_run_manager=None) -> str:
+    """
+    Queries vector database to find historical transction entries, notes or descriptions.
+    """
+    config = tool_run_manager.config if tool_run_manager else {}
+    user_id = config.get("configurable", {}).get("user_id", "unknown")
+
+    from langchain_openai import OpenAIEmbeddings
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
     query_vector = embeddings.embed_query(query)
 
-    # Query Qdrant with a trict user metadata security filter
+    from qdrant_client import models as qdrant_models
     search_results = qdrant_client.query_points(
         collection_name=qdrant_collection,
         query=query_vector,
@@ -39,121 +59,77 @@ def search_semantic_history(user_id: str, query: str, limit: int = 5) -> str:
                 )
             ]
         ),
-        limit=limit
+        limit=5
     )
-
     if not search_results.points:
         return "No relevant historical transaction narratives found in the vector index."
     
-    contexts = []
-    for point in search_results.points:
-        payload = point.payload
-        contexts.append(f"- Context: {payload.get("text", point.payload)} (Doc Type: {payload.get('doc_type', 'unknown')})")
+    return "\n".join([f"- Context: {p.payload.get("text")}" for p in search_results.points])
     
-    return "\n".join(contexts)
-
-def query_active_subscriptions(user_id: str) -> str:
+@tool
+def query_live_portfolio_balances(tool_run_manager=None) -> str:
     """
-    Query MongoDB directly for user's active recurring subscriptions.
+    Queries current stock asset positions, quantities, and cost metrics directly from MongoDB.
     """
-    subs = Subscription.objects(user_id=user_id, is_active=True)
+    config = tool_run_manager.config if tool_run_manager else {}
+    user_id = config.get("configurable", {}).get("user_id", "unknown")
+
+    portfolios = InvestmentPortfolio.objects(user_id=user_id)
+    if not portfolios:
+        return "You do not currently hold any active tracked market investment portfolio."
     
-    if not subs:
-        return "The user has no active recurring subscription."
-    
-    sub_details = []
-    for s in subs:
-        sub_details.append(f"- {s.name}: {s.currency} {float(s.fee):,.2f} ({s.billing_cycle})")
+    holdings = []
+    for p in portfolios:
+        holdings.append({
+            "ticker": p.ticker, 
+            "type": p.asset_type, 
+            "qty": float(p.total_quantity), 
+            "avg_price": float(p.average_buy_price)
+        })
 
-    return "\n".join(sub_details)
+    return json.dumps({"active_holdings": holdings}, indent=2)
 
-def run_financial_agent(user_id: str, user_message: str) -> str:
-    # Define tool schema for OpenAI
-    tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "search_semantic_history",
-                "description": "Use this tool to find deep semantic contexts, notes, PDF document chunks, receipts, or specific transaction descriptions from vector memory.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {"type": "string", "description": "The natural language search term or topic to query."}
-                    },
-                    "required": ["query"]
-                }
-            }
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "query_active_subscriptions",
-                "description": "Use this tool strictly when the user asks what active subscriptions they are currently paying for.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {}
-                }
-            }
-        }
-    ]
+tools_list = [search_semantic_history, query_live_portfolio_balances]
+tool_node = ToolNode(tools_list)
 
-    system_instruction = (
-        "You are IntelliFin AI, an expert agentic financial advisor. You have real-time access to the user's "
-        "financial database through tools. Always maintain financial precision. If tool inputs return data, "
-        "synthesize it clearly. Never make up transanctional metrics."
+model = ChatOpenAI(model="gpt-5.4-mini", temeprature=0).bind_tools(tools_list)
+
+def brain_node(state: AgentState, config: dict):
+    sys_prompt = SystemMessage(
+        content=(
+            "You are IntelliFin AI, a proactive, elite financial advisor. "
+            "When a user asks about their financial health, portfolio status, or perfromance, "
+            "you MUST call the 'query_live_portfolio_balances' tool first to examine their holdings. "
+            "Do not apologize or claim you lack information until you have checked your tools. "
+            "Analyze what you find in their portfolio and give a constructive breakdown of their financial health."
+        )        
     )
+    return {"messages": [model.invoke([sys_prompt] + list(state["messages"]), config=config)]}
 
-    # First LLM call
-    messages = [
-        {"role": "system", "content": system_instruction},
-        {"role": "user", "content": user_message}
-    ]
+workflow = StateGraph(AgentState)
+workflow.add_node("financial_brain", brain_node)
+workflow.add_node("action_tools", tool_node)
 
-    response = openai_client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,
-        tools=tools,
-        tool_choice="auto"
-    )
+workflow.add_edge(START, "financial_brain")
+workflow.add_conditional_edges("financial_brain", tools_condition, {True: "action_tools", False: END})
+workflow.add_edge("action_tools", "financial_brain")
 
-    response_message = response.choices[0].message
-    tool_calls = response_message.tool_calls
+memory = MemorySaver()
+compiled_graph = workflow.compile(checkpointer=memory)
 
-    # Handle tool execution if LLM calls it
-    if tool_calls:
-        # Append LLM's initial thoguht containign tool requirements to conversation history
-        messages.append(response_message)
+def run_financial_agent(user_id, user_query):
+    """
+    Initializes and run LangGraph workflow.
+    """
+    config = {"configurable": {"thread_id": user_id, "user_id": user_id}}
 
-        for tool_call in tool_calls:
-            function_name = tool_call.function.name
-            function_args = json.loads(tool_call.function.arguments)
+    input_state = {
+        "messages": [HumanMessage(content=user_query)],
+        "user_id": user_id
+    }
 
-            print(f"Agent executing tool: {function_name} with arguments {function_args}")
+    final_state = compiled_graph.invoke(input_state, config=config)
 
-            # Execute the matching Python tool function
-            if function_name == "search_semantic_history":
-                tool_output = search_semantic_history(user_id=user_id, query=function_args.get("query"))
-            elif function_name == "query_active_subscriptions":
-                tool_output = query_active_subscriptions(user_id=user_id)
-            else:
-                tool_output = "Error: Tool execution target mismatch."
+    return final_state["messages"][-1].content
 
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "name": function_name,
-                "content": tool_output
-            })
-
-        # Second LLM call, generate synthesized natural answer with tool data
-        final_response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=messages
-        )
-        return final_response.choices[0].message.content
     
-    # Return direct text message if no tools are required to generate the answer.
-    return response_message.content
-
-
-

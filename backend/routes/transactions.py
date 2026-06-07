@@ -12,17 +12,17 @@ from services import sync_transaction_to_qdrant, handle_subscription_linking, de
 # Define the blueprint
 transactions_bp = Blueprint("transaction", __name__)
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0)
 
 @transactions_bp.route("/", methods=["GET"])
 @token_required
-def get_all_transactions(current_user):
+def get_user_transactions(current_user):
     try:
         # Retrieve transactions belonging to the user
-        transactions = Transaction.objects(user_id=current_user.id).order_by("-date")
+        transactions = Transaction.objects(user_id=current_user.id).only("id", "date", "description", "amount","currency", "category").order_by("-date")
 
         if not transactions:
-            return jsonify({"error": "Transactions not found or unauthorized."}), 404
+            return jsonify([]), 200
         
         transaction_list = []
         for t in transactions:
@@ -32,12 +32,8 @@ def get_all_transactions(current_user):
                 "type": t.type,
                 "description": t.description,
                 "amount": float(t.amount),
-                "method": t.method,
                 "currency": t.currency,
                 "category": t.category,
-                "source": t.source,
-                "doc_name": t.doc_name if t.doc_name else None,
-                "subscription_id": str(t.subscription_id.id) if t.subscription_id else None
             })
 
         return jsonify(transaction_list), 200
@@ -46,13 +42,13 @@ def get_all_transactions(current_user):
 
 @transactions_bp.route("/<string:tx_id>", methods=["GET"])
 @token_required
-def get_transaction(current_user, tx_id):
+def get_transaction_detail(current_user, tx_id):
     try:
         tx = Transaction.objects(id=tx_id, user_id=current_user.id).first()
         if not tx:
             return jsonify({"error": "Transaction not found or unauthorized."}), 404
         
-        transaction = {
+        transaction_detail = {
             "transaction_id": str(tx.id),
             "date": tx.date.isoformat(),
             "type": tx.type,
@@ -65,7 +61,7 @@ def get_transaction(current_user, tx_id):
             "doc_name": tx.doc_name if tx.doc_name else None,
             "subscription_id": str(tx.subscription_id.id) if tx.subscription_id else None
         }
-        return jsonify(transaction), 200
+        return jsonify(transaction_detail), 200
 
     except Exception as e:
         return jsonify({"error": f"failed to retrieve transaction: {str(e)}"})
@@ -247,7 +243,7 @@ def update_transaction(current_user, tx_id):
             return jsonify({"error": "Transaction not found or unauthorized."}), 404
         
         # Update database fields if present in payload
-        if "descripion" in data:
+        if "description" in data:
             tx.description = data["description"].strip()
         if "amount" in data:
             tx.amount = data["amount"]

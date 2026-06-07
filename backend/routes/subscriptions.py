@@ -19,7 +19,7 @@ def get_all_subscriptions(current_user):
         for sub in subscriptions:
             subscription_list.append({
                 "subscription_id": str(sub.id),
-                "subscription_name": sub.name,
+                "description": sub.description,
                 "fee": float(sub.fee),
                 "currency": sub.currency,
                 "billing_cycle": sub.billing_cycle,
@@ -45,14 +45,14 @@ def get_subscription(current_user, sub_id):
             
         subscription = {
             "subscription": str(sub.id),
-                "subscription_name": sub.name,
-                "fee": float(sub.fee) if sub.fee else None,
-                "currency": sub.currency,
-                "billing_cycle": sub.billing_cycle,
-                "next_billing_date": sub.next_billing_date.isoformat() if sub.next_billing_date else None,
-                "is_active": bool(sub.is_active),
-                "payment_method": sub.payment_method,
-                "category": sub.category
+            "description": sub.description,
+            "fee": float(sub.fee) if sub.fee else None,
+            "currency": sub.currency,
+            "billing_cycle": sub.billing_cycle,
+            "next_billing_date": sub.next_billing_date.isoformat() if sub.next_billing_date else None,
+            "is_active": bool(sub.is_active),
+            "payment_method": sub.payment_method,
+            "category": sub.category
         }
 
         return jsonify(subscription), 200
@@ -70,8 +70,8 @@ def update_subscription(current_user, sub_id):
         if not sub:
             return jsonify({"error": "Subscription record not found"}), 404
         
-        if "name" in data:
-            sub.name = data["name"].strip()
+        if "description" in data:
+            sub.description = data["description"].strip()
         if "fee" in data:
             sub.fee = float(data["fee"])
         if "currency" in data:

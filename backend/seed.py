@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import bcrypt
 from qdrant_client import QdrantClient
 
-from models import db, User, Subscription, Transaction, UserDocument
+from models import db, User, Subscription, Transaction, InvestmentPortfolio
 from services import sync_transaction_to_qdrant
 from services.rag_service import client as qdrant_raw_client
 
@@ -59,7 +59,7 @@ def seed_database():
     hashed_password = bcrypt.hashpw(plain_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     # Instantiate and save a user
     users = [
-        {"first_name": "Mei Leng", "last_name": "Tan", "email": "tml@email.com"},
+        {"first_name": "demo", "last_name": "user", "email": "demo@email.com"},
         {"first_name": "Marcus", "last_name": "Lim", "email": "marcus@email.com"},
         {"first_name": "Sarah", "last_name": "Tan", "email": "sarah@email.com"},
         {"first_name": "Florian", "last_name": "Beeres", "email": "florian@email.com"},
@@ -67,11 +67,11 @@ def seed_database():
     ]
 
     subscriptions = [
-        {"name": "Netflix Premium", "fee": 22.98, "currency": "SGD", "billing_cycle": "monthly", "category": "entertainment"},
-        {"name": "Spotify Family", "fee": 17.98, "currency": "SGD", "billing_cycle": "monthly", "category": "entertainment"},
-        {"name": "YouTube Premium", "fee": 13.98, "currency": "SGD", "billing_cycle": "monthly", "category": "entertainment"},
-        {"name": "Gym Membership", "fee": 95.00, "currency": "SGD", "billing_cycle": "monthly", "category": "fitness"},
-        {"name": "iCloud+ 2TB", "fee": 14.98, "currency": "USD", "billing_cycle": "monthly", "category": "software"}
+        {"description": "Netflix Premium", "fee": 22.98, "currency": "SGD", "billing_cycle": "monthly", "category": "entertainment"},
+        {"description": "Spotify Family", "fee": 17.98, "currency": "SGD", "billing_cycle": "monthly", "category": "entertainment"},
+        {"description": "YouTube Premium", "fee": 13.98, "currency": "SGD", "billing_cycle": "monthly", "category": "entertainment"},
+        {"description": "Gym Membership", "fee": 95.00, "currency": "SGD", "billing_cycle": "monthly", "category": "fitness"},
+        {"description": "iCloud+ 2TB", "fee": 14.98, "currency": "USD", "billing_cycle": "monthly", "category": "software"}
     ]
 
     categories = ["food", "transport", "utilities", "others"]
@@ -83,7 +83,14 @@ def seed_database():
         "others": ["Gadget Shop", "Movie Tickets", "Bookstore"]
     }
 
-    print("Creating mock user data with random subscriptions and transactions...")
+    assets = [
+        {"ticker": "AAPL", "asset_type": "equity", "base_price": 180.0},
+        {"ticker": "TSLA", "asset_type": "equity", "base_price": 175.0},
+        {"ticker": "BTC", "asset_type": "crypto", "base_price": 63000.0},
+        {"ticker": "ETH", "asset_type": "crypto", "base_price": 3400.0},
+    ]
+
+    print("Creating mock user data with portfolios and random transactions...")
 
     for user in users:
         new_user = User(
@@ -100,7 +107,7 @@ def seed_database():
         for sub in chosen_subscription:
             sub_record = Subscription(
                 user_id=new_user.id, 
-                name=sub["name"],
+                description=sub["description"],
                 fee=Decimal(str(sub["fee"])),
                 currency=sub["currency"],
                 billing_cycle=sub["billing_cycle"],
@@ -119,7 +126,7 @@ def seed_database():
                     user_id=new_user.id,
                     date=past_date,
                     type="expense",
-                    description=f"{sub["name"]} Subscription",
+                    description=f"{sub["description"]} Subscription",
                     amount=Decimal(str(sub["fee"])),
                     method="credit_card",
                     currency=sub["currency"],
@@ -130,6 +137,79 @@ def seed_database():
                 )
                 tx_sub.save()
                 sync_transaction_to_qdrant(tx_sub)
+
+        # Generate portfolio data
+        if new_user.first_name == "demo":
+            demo_trades = [
+                {"ticker": "AAPL", "asset_type": "equity", "action": "buy", "quantity": 15.0, "price_per_unit": 190.00, "days_ago": 45},
+                {"ticker": "AAPL", "asset_type": "equity", "action": "buy", "quantity": 10.0, "price_per_unit": 170.00, "days_ago": 20},
+                {"ticker": "TSLA", "asset_type": "equity", "action": "buy", "quantity": 20.0, "price_per_unit": 180.00, "days_ago": 30},
+                {"ticker": "TSLA", "asset_type": "equity", "action": "sell", "quantity": 5.0, "price_per_unit": 195.00, "days_ago": 5},
+                {"ticker": "BTC", "asset_type": "crypto", "action": "buy", "quantity": 0.5, "price_per_unit": 62000.00, "days_ago": 15}
+            ]
+            for trade in demo_trades:
+                trade_date = datetime.now(timezone.utc) - timedelta(days=trade["days_ago"])
+                total_amount = Decimal(str(trade["quantity"] * trade["price_per_unit"]))
+
+                tx_invest = Transaction(
+                    user_id=new_user.id,
+                    date=trade_date,
+                    type="investment",
+                    description=f"{trade["action"].upper()} {trade["quantity"]} {trade["ticker"]}",
+                    amount=total_amount,
+                    method="bank_transfer",
+                    currency="SGD",
+                    category="investment",
+                    trade_action = trade["action"],
+                    ticker = trade["ticker"],
+                    quantity = trade["quantity"],
+                    price_per_unit = trade["price_per_unit"],
+                    created_at=trade_date,
+                    updated_at=trade_date
+                )
+                tx_invest.save()
+                sync_transaction_to_qdrant(tx_invest)
+
+            # Save into investment_portfolio for UI and AI utility
+            InvestmentPortfolio(user_id=new_user.id, ticker="AAPL", asset_type="equity", total_quantity=25.0, average_buy_price=182.0).save()
+            InvestmentPortfolio(user_id=new_user.id, ticker="TSLA", asset_type="equity", total_quantity=15.0, average_buy_price=180.0).save()
+            InvestmentPortfolio(user_id=new_user.id, ticker="BTC", asset_type="crypto", total_quantity=0.5, average_buy_price=62000.0).save()
+            
+        else:
+            chosen_assets = random.sample(assets, random.randint(1,3))
+            for asset in chosen_assets:
+                qty = round(random.uniform(5,50), 2) if asset["asset_type"] == "equity" else round(random.uniform(0.1, 1.5), 4)
+                buy_price = round(asset["base_price"] * random.uniform(0.9, 1.1), 2)
+                total_amount = Decimal(str(qty * buy_price))
+                trade_date = datetime.now(timezone.utc) - timedelta(days=random.randint(1,20))
+
+                tx_invest = Transaction(
+                    user_id=new_user.id,
+                    date=trade_date,
+                    type="investment",
+                    description=f"BUY {qty} {asset["ticker"]}",
+                    amount=total_amount,
+                    method="bank_transfer",
+                    currency="SGD",
+                    category="investment",
+                    trade_action = "buy",
+                    ticker = asset["ticker"],
+                    quantity = qty,
+                    price_per_unit = buy_price,
+                    source = "manual",
+                    created_at=trade_date,
+                    updated_at=trade_date
+                )
+                tx_invest.save()
+                sync_transaction_to_qdrant(tx_invest)
+
+                InvestmentPortfolio(
+                    user_id=new_user.id,
+                    ticker=asset["ticker"],
+                    asset_type=asset["asset_type"],
+                    total_quantity=qty,
+                    average_buy_price=buy_price
+                ).save()
 
         # Generate 15 randomized transaction
         for _ in range(15):
@@ -163,7 +243,6 @@ def seed_database():
                 updated_at=t_date
             )
             tx.save()
-
             sync_transaction_to_qdrant(tx)
 
     print(f"\n[SUCCESS] Database seeding complete!")

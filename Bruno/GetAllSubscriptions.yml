@@ -8,7 +8,7 @@ http:
   url: http://127.0.0.1:5000/api/subscriptions
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExYzUyMmE0ZWVmMGRjYTk1MDQwNDAxIiwiZXhwIjoxNzgwMzgzMzU5fQ.-6I0H_I9cCe3jFHPRCOSJPYAF_G-HVh2nP6_sf-XEyg
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmEyNTNhYzIyZTM2MWJjYzg4NzQyODk4IiwiZXhwIjoxNzgwOTEyODUzfQ.M4fSqQG485YpBYekCevrvfz4zxh_UOAaOZz_O2mvcnE
 
 settings:
   encodeUrl: true

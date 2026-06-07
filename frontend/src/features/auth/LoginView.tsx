@@ -2,6 +2,7 @@ import { useState } from "react";
 import { authService } from "../../services/authService";
 import type { LoginCredentials } from "../../types/authTypes";
 import { cn } from "../../utils/cn";
+import { transactionService } from "../../services/financeService";
 
 interface LoginViewProps {
     onAuthSuccess: () => void;
@@ -120,3 +121,4 @@ export const LoginView: React.FC<LoginViewProps> = ({ onAuthSuccess, onSwitchToS
         </div>
     );
 };
+

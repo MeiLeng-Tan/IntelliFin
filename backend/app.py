@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask_cors import CORS
 from mongoengine import connect
-from routes import auth_bp, transactions_bp, subscription_bp, documents_bp, agent_bp
+from routes import auth_bp, transactions_bp, subscription_bp, investment_bp, documents_bp, agent_bp
 
 def create_app():
     app = Flask(__name__)
@@ -16,13 +16,14 @@ def create_app():
     db_name = os.getenv("DB_NAME", "intellifin_db")
     connect(host=mongo_uri, db=db_name)
 
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(transactions_bp, url_prefix='/api/transactions')
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(transactions_bp, url_prefix="/api/transactions")
     app.register_blueprint(subscription_bp, url_prefix="/api/subscriptions")
-    app.register_blueprint(documents_bp, url_prefix='/api/documents')
+    app.register_blueprint(investment_bp, url_prefix="/api/portfolio")
+    app.register_blueprint(documents_bp, url_prefix="/api/documents")
     app.register_blueprint(agent_bp, url_prefix="/api/chat")
 
-    @app.route('/', methods=['GET'])
+    @app.route("/", methods=["GET"])
     def index():
         return jsonify({
             "message": "IntelliFin backend API is live."

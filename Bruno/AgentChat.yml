@@ -10,11 +10,11 @@ http:
     type: json
     data: |-
       {
-        "message": "What is my most recent transaction?"
+        "message": "Looking at my investment portfolio, incomes and expenses. Tell me my financial health status."
       }
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmExZDM2Mjk2OTcwNjU0NDA2YjNjYWE5IiwiZXhwIjoxNzgwMzg1ODE4fQ.BmNfH9yVqe8xqD90NKUQw2xaaxCcdNn_oNW8OEFRxVk
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmEyNTNhYzIyZTM2MWJjYzg4NzQyODk4IiwiZXhwIjoxNzgwOTEzNDkzfQ.Ys8VCo3Gr6mlv1BsKKLoPej3YCCu2RFSfbqzQVZBjn4
 
 settings:
   encodeUrl: true

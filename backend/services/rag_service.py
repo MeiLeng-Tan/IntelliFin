@@ -112,22 +112,34 @@ def sync_transaction_to_qdrant(transaction):
 
     tx_type = getattr(transaction, "type", "expense").lower()
 
-    if tx_type == "income":
-        action_phrase = f"received ${transaction.amount:,.2f} of income from"
+    if tx_type == "investment":
+        text_payload = (
+            f"Investment activity log: On {transaction.date.strftime("%B %d, %Y")}, "
+            f"the user executed a {transaction.trade_action.upper()} order for {transaction.quantity} units "
+            f"of {transaction.ticker} ({transaction.category.upper()}) at a price of {transaction.price_per_unit} {transaction.currency} per unit. "
+            f"The total transaction allocation volume amounted to {transaction.amount} {transaction.currency} via {transaction.method}."
+        )
     else:
-        action_phrase = f"spent ${transaction.amount:,.2f} on item"
+        if tx_type == "income":
+            action_phrase = f"received ${transaction.amount} ${transaction.currency} from"
+        else:
+            action_phrase = f"spent ${transaction.amount} ${transaction.currency} on"
 
-    narrative_text = (
-        f"Transaction Record: User {action_phrase} '{transaction.description}'."
-        f"This transaction categorized under '{transaction.category}' "
-        f"and logged via {transaction.source}."
-    )
+        text_payload = (
+            f"Transaction activity log: On {transaction.date.strftime("%B %d, %Y")}, "
+            f"the User {action_phrase} '{transaction.description}'. "
+            f"This transaction categorized under '{transaction.category}' category, "
+            f"paid via {transaction.method}."
+            # f"and logged via {transaction.source}."
+        )
 
     metadata = {
         "user_id": str(raw_user_id),
         "doc_type": "transaction",
+        "date": transaction.date.isoformat(),
         "transaction_type": tx_type,
         "transaction_category": str(transaction.category),
+        "ticker": getattr(transaction, "ticker", None),
         "transaction_id": str(transaction.id),
         "source": transaction.source
     }
@@ -136,7 +148,7 @@ def sync_transaction_to_qdrant(transaction):
 
     # Append the transaction vector to collection
     vector_store.add_texts(
-        texts=[narrative_text],
+        texts=[text_payload],
         metadatas=[metadata],
         ids=[qdrant_uuid]
     )
