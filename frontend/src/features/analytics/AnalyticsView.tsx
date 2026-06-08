@@ -7,11 +7,11 @@ import type { Transaction, TransactionSummary, Subscription } from "../../types/
 
 interface AnalyticsViewProps {
     transactions: Transaction[];
-    summary: TransactionSummary,
+    summary: TransactionSummary | null,
     subscriptions: Subscription[];
     onEditTransaction: (tx: Transaction) => void;
     onDeleteTransaction: (id: string) => void;
-    onEditSubscription: (sub: Subscription) => void;
+    // onEditSubscription: (sub: Subscription) => void;
 }
 
 //onEditSubscription
@@ -91,7 +91,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ transactions, summ
                 </div>
 
                 {/**Dynamic Interactve Ledger Data Matrix */}
-                <div className="bg-white border border-gray-200 roudned-xl shadow-xs overflow-hidden">
+                <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
                     <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                         <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">
                             Categorized Ledger Entries
