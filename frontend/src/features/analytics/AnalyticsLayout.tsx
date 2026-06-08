@@ -67,17 +67,17 @@ export const AnalyticsLayout: React.FC = () => {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const numericAmount = parseFloat(amount);
+    // const numericAmount = parseFloat(amount);
     
-    const basePayload = {
-      date: new Date(date).toISOString(),
-      type,
-      description: description.trim(),
-      amount: numericAmount,
-      category: category.trim().toLowerCase(),
-      method: "cash",
-      currency: "SGD"
-    };
+    // const basePayload = {
+    //   date: new Date(date).toISOString(),
+    //   type,
+    //   description: description.trim(),
+    //   amount: numericAmount,
+    //   category: category.trim().toLowerCase(),
+    //   method: "cash",
+    //   currency: "SGD"
+    // };
     
 
     try {

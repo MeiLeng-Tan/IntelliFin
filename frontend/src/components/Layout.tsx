@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cn } from "../utils/cn";
 import { AnalyticsLayout } from "../features/analytics/AnalyticsLayout";
 import { PortfolioLayout } from "../features/portfolio/PortfolioLayout";

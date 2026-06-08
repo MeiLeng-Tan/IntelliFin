@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts";
-import { ArrowUpRight, ArrowDownRight, Wallet, Calendar, Trash2, X, FileText, Link, CreditCard } from "lucide-react";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { X, FileText, Link, CreditCard } from "lucide-react";  //ArrowUpRight, ArrowDownRight, Wallet, Calendar, Trash2, 
 import { cn } from "../../utils/cn";
 import { transactionService } from "../../services/financeService";
 import type { Transaction, TransactionSummary, Subscription } from "../../types/financeTypes";
@@ -14,7 +14,8 @@ interface AnalyticsViewProps {
     onEditSubscription: (sub: Subscription) => void;
 }
 
-export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ transactions, summary, subscriptions, onEditTransaction, onDeleteTransaction, onEditSubscription }) => {
+//onEditSubscription
+export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ transactions, summary, subscriptions, onEditTransaction, onDeleteTransaction }) => {
     const [typeFilter, setTypeFilter] = useState<"all" | "income" | "expense">("all");
     const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
     const [detailedTx, setDetailedTx] = useState<Transaction | null>(null);
