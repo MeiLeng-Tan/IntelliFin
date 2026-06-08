@@ -3,33 +3,26 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, Cart
 import { ArrowUpRight, ArrowDownRight, Wallet, Calendar, Trash2, X, FileText, Link, CreditCard } from "lucide-react";
 import { cn } from "../../utils/cn";
 import { transactionService } from "../../services/financeService";
-import type { Transaction, Subscription } from "../../types/financeTypes";
+import type { Transaction, TransactionSummary, Subscription } from "../../types/financeTypes";
 
 interface AnalyticsViewProps {
     transactions: Transaction[];
+    summary: TransactionSummary,
     subscriptions: Subscription[];
     onEditTransaction: (tx: Transaction) => void;
     onDeleteTransaction: (id: string) => void;
     onEditSubscription: (sub: Subscription) => void;
 }
 
-export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ transactions, subscriptions, onEditTransaction, onDeleteTransaction, onEditSubscription }) => {
+export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ transactions, summary, subscriptions, onEditTransaction, onDeleteTransaction, onEditSubscription }) => {
     const [typeFilter, setTypeFilter] = useState<"all" | "income" | "expense">("all");
     const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
     const [detailedTx, setDetailedTx] = useState<Transaction | null>(null);
     const [loadingDetail, setLoadingDetail] = useState<boolean>(false);
-
-    // Calculation from backend attributes
-    const totalIncome = transactions.filter(t => t.type === "income").reduce((sum, t) => sum + Number(t.amount), 0);
-    const totalExpense = transactions.filter(t => t.type === "expense").reduce((sum, t) => sum + Number(t.amount), 0);
-    const netSavings = totalIncome - totalExpense;
-
-    const categories = Array.from(new Set(transactions.map(t => t.category)));
-    const chartData = categories.map(cat => {
-        const income = transactions.filter(t => t.category === cat && t.type === "income").reduce((sum, t) => sum + Number(t.amount), 0);
-        const expense = transactions.filter(t => t.category === cat && t.type === "expense").reduce((sum, t) => sum + Number(t.amount), 0);
-        return { name: cat, Income: income, Expense: expense };
-    }).filter(item => item.Income > 0 || item.Expense > 0);
+    
+    const chartData = summary?.chart_data || [];
+    const totalIncome = summary?.total_incomes || 0;
+    const totalExpense = summary?.total_expenses || 0;
 
     const filteredTransactions = transactions.filter(t => {
         if (typeFilter === "income") return t.type === "income";
@@ -68,7 +61,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ transactions, subs
                             Total Inflow
                         </span>
                         <h3 className="text-xl font-bold text-emerald-600 mt-0.5">
-                            ${totalIncome.toFixed(2)}
+                            ${totalIncome}
                         </h3>
                     </div>
                     <div className="bg-white border border-gray-200 p-4 rounded-xl">
@@ -76,7 +69,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ transactions, subs
                             Total Outflow
                         </span>
                         <h3 className="text-xl font-semibold text-rose-600 mt-0.5">
-                            ${totalExpense.toFixed(2)}
+                            ${totalExpense}
                         </h3>
                     </div>
                 </div>
@@ -144,7 +137,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ transactions, subs
                                         <td className="px-4 py-3 text-gray-400"><span className="bg-gray-100 text-gray-60 txt-xs px-2.5 py-1 rounded-lg font-medium capitalize">{t.category}</span></td>
                                         <td className="px-4 py-3 text-gray-400">{t.date.split("T")[0]}</td>
                                         <td className={cn("px-4 py-3 text-right font-bold", t.type === "income" ? "text-emerald-600" : "text-gray-900")}>
-                                            {t.type === "income" ? "+" : "-"} ${t.amount.toFixed(2)}
+                                            {t.type === "income" ? "+" : "-"} ${t.amount}
                                         </td>
                                         <td className="px-4 py-3 text-center space-x-2" onClick={(e) => e.stopPropagation()}>
                                             <button

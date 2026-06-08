@@ -34,35 +34,40 @@ def get_investment_portfolio(current_user):
 @investment_bp.route("/summary", methods=["GET"])
 @token_required
 def get_portfolio_summary(current_user):
-    raw_positions = InvestmentPortfolio.objects(user_id=current_user.id)
+    try: 
 
-    positions_list = []
-    total_value_sgd = Decimal(0.0)
-    distribution = {
-        "equity": Decimal(0.0), 
-        "crypto": Decimal(0.0), 
-        "commodity": Decimal(0.0), 
-        "cash": Decimal(0.0)
-    }
+        raw_positions = InvestmentPortfolio.objects(user_id=current_user.id)
 
-    for pos in raw_positions:
-        # Calculate individual position cost
-        pos_cost = pos.total_quantity * pos.average_buy_price
-        total_value_sgd += pos_cost
+        positions_list = []
+        total_value_sgd = Decimal(0.0)
+        distribution = {
+            "equity": Decimal(0.0), 
+            "crypto": Decimal(0.0), 
+            "commodity": Decimal(0.0), 
+            "cash": Decimal(0.0)
+        }
 
-        # Accumulate asset-class specific totals
-        if pos.asset_type in distribution:
-            distribution[pos.asset_type] += pos_cost
+        for pos in raw_positions:
+            # Calculate individual position cost
+            pos_cost = pos.total_quantity * pos.average_buy_price
+            total_value_sgd += pos_cost
+
+            # Accumulate asset-class specific totals
+            if pos.asset_type in distribution:
+                distribution[pos.asset_type] += pos_cost
+            
+            positions_list.append({
+                "asset_type": pos.asset_type,
+                "ticker": pos.ticker,
+                "total_quantity": pos.total_quantity,
+                "average_buy_price": pos.average_buy_price
+            })
         
-        positions_list.append({
-            "asset_type": pos.asset_type,
-            "ticker": pos.ticker,
-            "total_quantity": pos.total_quantity,
-            "average_buy_price": pos.average_buy_price
-        })
+        return jsonify({
+            "portfolios": positions_list,
+            "totalValueSGD": float(total_value_sgd),
+            "assetDistribution": {k: float(v) for k, v in distribution.items()}
+        }), 200
     
-    return jsonify({
-        "portfolios": positions_list,
-        "totalValueSGD": float(total_value_sgd),
-        "assetDistribution": {k: float(v) for k, v in distribution.items()}
-    }), 200
+    except Exception as e:
+        return jsonify({"error": "Failed to comppile investment portfolio."}), 500

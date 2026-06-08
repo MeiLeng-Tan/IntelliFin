@@ -1,5 +1,5 @@
 import api from "./api";
-import type { Transaction, Subscription } from "../types/financeTypes";
+import type { Transaction, TransactionSummary, Subscription } from "../types/financeTypes";
 
 export const transactionService = {
     /**
@@ -17,6 +17,11 @@ export const transactionService = {
      */
     getTransactionById: async (tx_id: string) : Promise<Transaction> => {
         const response = await api.get<Transaction>(`/transactions/${tx_id}`);
+        return response.data;
+    },
+
+    getTransactionSummary: async (): Promise<TransactionSummary> => {
+        const response = await api.get<TransactionSummary>("/transactions/summary");
         return response.data;
     },
 

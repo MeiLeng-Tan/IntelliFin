@@ -1,11 +1,11 @@
 info:
-  name: GetAllTransaction
+  name: GetTransactionSummary
   type: http
-  seq: 3
+  seq: 15
 
 http:
   method: GET
-  url: http://127.0.0.1:5000/api/transactions
+  url: http://127.0.0.1:5000/api/transactions/summary
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmEyNTNhYzIyZTM2MWJjYzg4NzQyODk4IiwiZXhwIjoxNzgxMDExNjg5fQ.xMXf0InEvaDqLMivTITomW3zGBkVCZpq0Rrv6NE8i_k

@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 from io import BytesIO
+from decimal import Decimal
+from collections import defaultdict
 from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
 from langchain_openai import ChatOpenAI
@@ -19,7 +21,7 @@ llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0)
 def get_user_transactions(current_user):
     try:
         # Retrieve transactions belonging to the user
-        transactions = Transaction.objects(user_id=current_user.id).only("id", "date", "description", "amount","currency", "category").order_by("-date")
+        transactions = Transaction.objects(user_id=current_user.id).only("id", "date", "type", "description", "amount","currency", "category").order_by("-date")
 
         if not transactions:
             return jsonify([]), 200
@@ -292,3 +294,55 @@ def delete_transaction(current_user, tx_id):
     
     except Exception as e:
         return jsonify({"error": f"failed to delete the transaction: {str(e)}"}), 500
+    
+@transactions_bp.route("/summary", methods=["GET"])
+@token_required
+def get_transaction_summary(current_user):
+    try:
+        transactions = Transaction.objects(user_id=current_user.id)
+
+        if not transactions:
+            return jsonify({
+                "total_incomes": 0.0,
+                "total_expenses": 0.0,
+                "net_savings": 0.0,
+                "chart_data": []
+            }), 200
+        
+        transactions_list = []
+        total_incomes = Decimal(0.0)
+        total_expenses = Decimal(0.0)
+        category_map = defaultdict(lambda: {"Income": Decimal(0.0), "Expense": Decimal(0.0)})
+
+        for tx in transactions:
+            tx_amount = tx["amount"]
+            tx_type = tx["type"]
+            category = tx["category"]
+
+            if tx_type == "income":
+                total_incomes += tx_amount
+                category_map[category]["Income"] += tx_amount
+            elif tx_type == "expense":
+                total_expenses += tx_amount
+                category_map[category]["Expense"] += tx_amount
+        
+        chart_data = [
+            {
+                "name": cat,
+                "Income": float(round(data["Income"], 2)),
+                "Expense": float(round(data["Expense"], 2))
+            }
+            for cat, data in category_map.items()
+        ]
+
+        summary_payload = {
+            "total_incomes": round(total_incomes, 2),
+            "total_expenses": round(total_expenses, 2),
+            "net_savings": round(total_incomes - total_expenses, 2),
+            "chart_data": chart_data
+        }
+
+        return jsonify(summary_payload), 200
+    
+    except Exception as e:
+        return jsonify({"error": "Failed to comppile financial metrics."}), 500

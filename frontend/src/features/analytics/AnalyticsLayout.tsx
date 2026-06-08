@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { cn } from "../../utils/cn";
 import { AnalyticsView } from "./AnalyticsView";
 import { transactionService } from "../../services/financeService";
-import type { Transaction, Subscription } from "../../types/financeTypes";
+import type { Transaction, Subscription, TransactionSummary } from "../../types/financeTypes";
 
 export const AnalyticsLayout: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [summary, setSummary] = useState<TransactionSummary | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [parsingFile, setParsingFile] = useState(false);
 
@@ -22,12 +23,14 @@ export const AnalyticsLayout: React.FC = () => {
 
   const loadFeatureData = async () => {
     try {
-      const [txList, subList] = await Promise.all([
+      const [txList, subList, summaryData] = await Promise.all([
         transactionService.getUserTransactions(),
-        transactionService.getUserSubscriptions()
+        transactionService.getUserSubscriptions(),
+        transactionService.getTransactionSummary()
       ]);
       setTransactions(txList);
       setSubscriptions(subList);
+      setSummary(summaryData);
     } catch (err) {
       console.error("Data ecosystem initialization pipeline failure:", err);
     }
@@ -133,6 +136,7 @@ export const AnalyticsLayout: React.FC = () => {
       {/* Presentation Workspace Container mapping subscriptions array and callback hooks */}
       <AnalyticsView 
         transactions={transactions} 
+        summary={summary}
         subscriptions={subscriptions}
         onDeleteTransaction={handleDelete} 
         onEditTransaction={handleStartEdit} 
