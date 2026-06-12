@@ -4,6 +4,13 @@ import { ArrowUpRight, ArrowDownRight, X, CreditCard, Edit2, Trash2 } from "luci
 import { cn } from "../../utils/cn";
 import type { Transaction, TransactionSummary, Subscription } from "../../types/financeTypes";
 
+type ChartDataItem = {
+  name: string;
+  year_month: string;
+  Income: number;
+  Expense: number;
+};
+
 interface AnalyticsViewProps {
     transactions: Transaction[];
     monthFilter: string;                       
@@ -76,7 +83,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         return acc;
     }, []).sort((a: any, b: any) => b.value - a.value);
 
-    const chartData = summary?.chart_data || [];
+    const chartData: ChartDataItem[] = summary?.chart_data || [];
     const totalIncomes = summary?.total_incomes || 0;
     const totalExpenses = summary?.total_expenses || 0;
 
