@@ -69,7 +69,7 @@ export const ChatWindow: React.FC = () => {
             const data = await sendAgentMessage(userMessage.text, [...messages, userMessage], sessionId);
 
             if (data.status === "success") {
-                setActiveActions(data.actions);
+                setActiveActions(data.actions || []);
                 setMessages(prev => [...prev, {
                     id: `msg-agent-${Date.now()}`,
                     sender: "ai agent",

@@ -11,16 +11,16 @@ interface DashboardViewProps {
     userName: string;
     summary: TransactionSummary;
     recentTransactions: Transaction[];
-    savingsGoalPercentage: number;
-    aiInsightMessage: string;
+    // savingsGoalPercentage: number;
+    // aiInsightMessage: string;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
     userName,
     summary,
     recentTransactions,
-    savingsGoalPercentage,
-    aiInsightMessage
+    // savingsGoalPercentage,
+    // aiInsightMessage
 }) => {
 
     // Get current calendar month 
