@@ -6,7 +6,7 @@ import type { Transaction, TransactionSummary, Subscription } from "../../types/
 
 type ChartDataItem = {
   name: string;
-  year_month: string;
+  year_month?: string;
   Income: number;
   Expense: number;
 };
