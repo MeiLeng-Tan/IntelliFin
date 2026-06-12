@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://127.0.0.1:5000/api/transactions/paginated?page=1&limit=10
+  url: http://127.0.0.1:5000/api/transactions/paginated?page=1&limit=10&month=2026-05
   params:
     - name: page
       value: "1"
@@ -13,9 +13,12 @@ http:
     - name: limit
       value: "10"
       type: query
+    - name: month
+      value: 2026-05
+      type: query
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmEyNTNhYzIyZTM2MWJjYzg4NzQyODk4IiwiZXhwIjoxNzgxMjc2NjM2fQ.tOBrwf-pGpbaCH2FMJ0CpKtjIuLUrL0ceiuz4wYHi94
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmEyYmYyYjUwOTZlMmRkZWQ1Mzc3MDllIiwiZXhwIjoxNzgxMzU4NDM3fQ.2nasgqaQyFO8cGv2_opcLe7p1LxzIxevMZulTK61Hzc
 
 settings:
   encodeUrl: true

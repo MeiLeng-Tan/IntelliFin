@@ -301,10 +301,27 @@ def get_paginated_transactions(current_user):
     try:
         page = int(request.args.get("page", 1))
         limit = int(request.args.get("limit", 10))
+        month_filter = request.args.get('month')
         skip_amount = (page - 1) * limit
 
+        query = Transaction.objects(user_id=current_user.id)
+
+        # Query filters
+        if month_filter and month_filter != "all":
+            year, month = month_filter.split('-') 
+            month_int = str(int(month)).zfill(2)
+
+            start_date = datetime(int(year), int(month), 1)
+
+            if int(month_int) == 12:
+                end_date = datetime(int(year) + 1, 1, 1)
+            else:
+                end_date = datetime(int(year), int(month_int) + 1, 1)
+
+            query = query.filter(date__gte=start_date, date__lt=end_date)
+        
         # Fetch chronological descending records
-        query = Transaction.objects(user_id=current_user.id).only("id", "date", "type", "description", "amount","currency", "category").order_by("-date")
+        query = query.only("id", "date", "type", "description", "amount","currency", "category").order_by("-date")
         total_records = query.count()
 
         records = query.skip(skip_amount).limit(limit)

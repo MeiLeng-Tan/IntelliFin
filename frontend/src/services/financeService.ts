@@ -24,8 +24,9 @@ export const transactionService = {
      * GET /api/transactions/paginated?page=${page}&limit=${limit}
      * Get paginated transactions
      */
-    getPaginatedTransactions: async (page: number, limit: number) => {
-        const response = await api.get(`/transactions/paginated?page=${page}&limit=${limit}`);
+    getPaginatedTransactions: async (page: number, limit: number, month?: string) => {
+        console.log(`/transactions/paginated?page=${page}&limit=${limit}${month && month !== 'all' ? `&month=${month}` : ''}`)
+        const response = await api.get(`/transactions/paginated?page=${page}&limit=${limit}${month && month !== 'all' ? `&month=${month}` : ''}`);
         return response.data;
     },
     

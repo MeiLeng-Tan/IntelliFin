@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { ResponsiveContainer, BarChart, Bar, Cell, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts";
-import { Plus, ArrowUpRight, ArrowDownRight, X, CreditCard, Edit2, Trash2 } from "lucide-react";  // Wallet, Calendar, Trash2, 
+import { ArrowUpRight, ArrowDownRight, X, CreditCard, Edit2, Trash2 } from "lucide-react";  
 import { cn } from "../../utils/cn";
 import type { Transaction, TransactionSummary, Subscription } from "../../types/financeTypes";
 
 interface AnalyticsViewProps {
     transactions: Transaction[];
+    monthFilter: string;                       
+    onMonthFilterChange: (month: string) => void;
     summary: TransactionSummary | null,
     subscriptions: Subscription[];
     hasMore: boolean;
@@ -39,9 +41,10 @@ const getMonthsFilterOptions = () => {
     return options;
 };
 
-//onEditSubscription
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ 
     transactions, 
+    monthFilter, 
+    onMonthFilterChange,
     summary, 
     subscriptions, 
     hasMore,
@@ -55,22 +58,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     onAddSubscription,
     onEditSubscription,
 }) => {
-    const [typeFilter, setTypeFilter] = useState<"all" | "income" | "expense">("all");
-    const [monthFilter, setMonthFilter] = useState<string>("all");
     const [viewingTransaction, setViewingTransaction]= useState<Transaction | null>(null);
     const [viewingSubscription, setViewingSubscription] = useState<Subscription | null>(null);
 
     const availableMonthTabs = getMonthsFilterOptions();
 
-    // Filter transaction across type (income/ expense) and month selection
-    const filteredTransactions = transactions.filter(t => {
-        if (typeFilter === "income" && t.type !== "income") return false;
-        if (typeFilter === "expense" && t.type !== "expense") return false;
-
-        if (monthFilter === "all") return true;
-
-        return t.date?.startsWith(monthFilter);
-    });
+    const filteredTransactions = transactions;
 
     const categoryData = filteredTransactions.reduce((acc: any, t) => {
         const cat = t.category || "Other";
@@ -114,7 +107,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                         {availableMonthTabs.map((opt) => (
                             <button
                                 key={opt.value}
-                                onClick={() => setMonthFilter(opt.value)}
+                                onClick={() => onMonthFilterChange(opt.value)}
                                 className={cn(
                                     "rounded-md px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                                     monthFilter === opt.value ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-900"
