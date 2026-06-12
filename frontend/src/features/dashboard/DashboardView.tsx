@@ -1,5 +1,12 @@
 import type { Transaction, TransactionSummary } from "../../types/financeTypes";
 
+type ChartDataItem = {
+  name: string;
+  year_month?: string;
+  Income: number;
+  Expense: number;
+};
+
 interface DashboardViewProps {
     userName: string;
     summary: TransactionSummary;
@@ -23,7 +30,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const currentMonthCode = `${currentYear}-${currentMonth}`;
     
     // Find current month summary data
-    const currentMonthData = summary?.chart_data?.find(
+    const currentMonthData: ChartDataItem = summary?.chart_data?.find(
         (item) => item?.year_month === currentMonthCode
     );
     const currentIncomes = currentMonthData ? currentMonthData.Income : 0;
