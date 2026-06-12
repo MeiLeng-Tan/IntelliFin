@@ -60,6 +60,35 @@ def get_subscription(current_user, sub_id):
     except Exception as e:
         return jsonify({"error": f"Failed to fetch subscription: {str(e)}"}), 500
 
+@subscription_bp.route("/new", methods=["POST"])
+@token_required
+def create_subscription(current_user):
+    data = request.get_json()
+    
+    if not all(k in data for k in ("description", "fee", "currency", "billing_cycle", "is_active")):
+        return jsonify({"error": "Missing required fields"}), 400
+    
+    try:
+        category = data.get("category", "others").strip().lower()
+        
+        # Save subscription to database
+        sub = Subscription(
+            user_id=current_user.id,
+            description=data["description"],
+            fee=data["fee"],
+            currency=data["currency"],
+            billing_cycle=data["billing_cycle"],
+            payment_method=data["payment_method"],
+            category=category,
+            is_active=data["is_active"]
+        )
+        sub.save()
+
+        return jsonify({"message": "New subscription recorded.", "id":str(sub.id)}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
 @subscription_bp.route("/<string:sub_id>", methods=["PUT"])
 @token_required
 def update_subscription(current_user, sub_id):

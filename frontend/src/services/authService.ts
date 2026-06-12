@@ -10,6 +10,7 @@ export const authService = {
         const response = await api.post<AuthResponse>("/auth/login", credentials);
         if (response.data.token) {
             localStorage.setItem("token", response.data.token);
+            localStorage.setItem("user", JSON.stringify(response.data.user));
         }
         return response.data;
     },
@@ -21,12 +22,17 @@ export const authService = {
         const response = await api.post<AuthResponse>("/auth/signup", userData);
         if (response.data.token) {
             localStorage.setItem("token", response.data.token);
+            localStorage.setItem("user", JSON.stringify(response.data.user));
         }
         return response.data;
     },
 
     logout: (): void => {
+        sessionStorage.removeItem("intellifin_chat");
+        sessionStorage.removeItem("intellifin_session_id");
         localStorage.removeItem("token");
-        window.location.href = "/login"
+        localStorage.removeItem("user");
+        
+        window.location.href = "/login";
     }
 }

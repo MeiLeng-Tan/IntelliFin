@@ -120,7 +120,7 @@ def seed_database():
             sub_record.save()
             
             # Add transactions linked to the subscription model
-            for i in range(2):
+            for i in range(3):
                 past_date = datetime.now(timezone.utc) - timedelta(days=30 * i + 2)
                 tx_sub = Transaction(
                     user_id=new_user.id,
@@ -211,8 +211,8 @@ def seed_database():
                     average_buy_price=buy_price
                 ).save()
 
-        # Generate 15 randomized transaction
-        for _ in range(15):
+        # Generate 50 randomized transaction
+        for _ in range(50):
             category = random.choice(categories)
             t_type = "expense" if random.random() > 0.15 else "income"
             
@@ -226,7 +226,7 @@ def seed_database():
                 amount = round(random.uniform(5, 120), 2)
                 method = random.choice(methods)
 
-            random_days_ago = random.randint(0, 30)
+            random_days_ago = random.randint(0, 90)
             t_date = datetime.now(timezone.utc) - timedelta(days=random_days_ago)
 
             tx = Transaction(

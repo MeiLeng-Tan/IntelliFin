@@ -4,6 +4,7 @@ Transaction model schema for 'transaction' collection.
 
 from datetime import datetime, timezone
 from mongoengine import Document, StringField, DecimalField, DateTimeField, ReferenceField, CASCADE, NULLIFY
+from bson import ObjectId
 
 class Transaction(Document):
     """
@@ -44,3 +45,25 @@ class Transaction(Document):
     
     def __repr__(self):
         return f"<Transaction {self.type.upper()} - {self.description[:20]}:{self.currency} {self.amount}>"
+
+    def to_json_dict(self):
+        """Converts the MongoEngine document into a clean Python dictionary"""
+        data = {}
+        for key in self._data:
+            value = self._data[key]
+            
+            if key in ['amount', 'quantity', 'price_per_unit']:
+                data[key] = float(value) if value is not None else 0.0
+            elif isinstance(value, ObjectId):
+                data[key] = str(value)
+            elif hasattr(value, 'id'):
+                data[key] = str(value.id)
+            elif hasattr(value, 'isoformat'): 
+                data[key] = value.isoformat()
+            else:
+                data[key] = value
+                
+        if 'id' in data:
+            data['transaction_id'] = data["id"]
+            
+        return data

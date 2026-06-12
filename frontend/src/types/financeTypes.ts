@@ -14,7 +14,7 @@ export interface Transaction {
 
 export interface Subscription {
     subscription_id: string;
-    subscription_name: string;
+    description: string;
     fee: number;
     currency: string;
     billing_cycle: "weekly" | "monthly" | "quarterly" | "annual"

@@ -20,6 +20,19 @@ export const transactionService = {
         return response.data;
     },
 
+    /**
+     * GET /api/transactions/paginated?page=${page}&limit=${limit}
+     * Get paginated transactions
+     */
+    getPaginatedTransactions: async (page: number, limit: number) => {
+        const response = await api.get(`/transactions/paginated?page=${page}&limit=${limit}`);
+        return response.data;
+    },
+    
+    /**
+     * GET /api/transactions/summary
+     * Get transactions summary
+     */
     getTransactionSummary: async (): Promise<TransactionSummary> => {
         const response = await api.get<TransactionSummary>("/transactions/summary");
         return response.data;
@@ -59,7 +72,7 @@ export const transactionService = {
      * DELETE /api/transactions/:id
      * Delete a transaction
      */
-    delete: async (tx_id: string): Promise<void> => {
+    deleteTransaction: async (tx_id: string): Promise<void> => {
         await api.delete(`/transactions/${tx_id}`)
     },
 
@@ -82,7 +95,16 @@ export const transactionService = {
     },
 
     /**
-     * PUT /api/subscriptions/:tx_id
+     * POST /api/subscriptions/new
+     * Create a new subscription and send to database
+     */
+    createSubscription: async (subscription: Omit<Subscription, "subscription_id">): Promise<{ message: string; id:string }> => {
+        const response = await api.post<{ message: string; id: string }>("/subscriptions/new", subscription);
+        return response.data;
+    },
+
+    /**
+     * PUT /api/subscriptions/:sub_id
      * Update subscription
      */
     updateSubscription: async (sub_id: string, updates: Partial<Subscription>): Promise<void> => {

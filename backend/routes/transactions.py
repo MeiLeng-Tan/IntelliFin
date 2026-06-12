@@ -294,55 +294,92 @@ def delete_transaction(current_user, tx_id):
     
     except Exception as e:
         return jsonify({"error": f"failed to delete the transaction: {str(e)}"}), 500
-    
+
+@transactions_bp.route("/paginated", methods=["GET"])
+@token_required
+def get_paginated_transactions(current_user):
+    try:
+        page = int(request.args.get("page", 1))
+        limit = int(request.args.get("limit", 10))
+        skip_amount = (page - 1) * limit
+
+        # Fetch chronological descending records
+        query = Transaction.objects(user_id=current_user.id).only("id", "date", "type", "description", "amount","currency", "category").order_by("-date")
+        total_records = query.count()
+
+        records = query.skip(skip_amount).limit(limit)
+        serialized_txs = [tx.to_json_dict() for tx in records]
+
+        return jsonify({
+            "status": "success",
+            "transactions": serialized_txs,
+            "has_more": skip_amount + len(serialized_txs) < total_records
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)}), 500
+
+
 @transactions_bp.route("/summary", methods=["GET"])
 @token_required
 def get_transaction_summary(current_user):
     try:
-        transactions = Transaction.objects(user_id=current_user.id)
-
-        if not transactions:
-            return jsonify({
-                "total_incomes": 0.0,
-                "total_expenses": 0.0,
-                "net_savings": 0.0,
-                "chart_data": []
-            }), 200
-        
-        transactions_list = []
-        total_incomes = Decimal(0.0)
-        total_expenses = Decimal(0.0)
-        category_map = defaultdict(lambda: {"Income": Decimal(0.0), "Expense": Decimal(0.0)})
-
-        for tx in transactions:
-            tx_amount = tx["amount"]
-            tx_type = tx["type"]
-            category = tx["category"]
-
-            if tx_type == "income":
-                total_incomes += tx_amount
-                category_map[category]["Income"] += tx_amount
-            elif tx_type == "expense":
-                total_expenses += tx_amount
-                category_map[category]["Expense"] += tx_amount
-        
-        chart_data = [
+        # Pipeline to group transaction in the database by Month-Year
+        pipeline = [
+            {"$match": {"user_id": current_user.id}},
             {
-                "name": cat,
-                "Income": float(round(data["Income"], 2)),
-                "Expense": float(round(data["Expense"], 2))
-            }
-            for cat, data in category_map.items()
+                "$group": {
+                    "_id": {
+                        "year": {"$year": "$date"},
+                        "month": {"$month": "$date"}
+                    },
+                    "total_income": {
+                        "$sum": {"$cond": [{"$eq": ["$type", "income"]}, "$amount", 0]}
+                    },
+                    "total_expense": {
+                        "$sum": {"$cond": [{"$eq": ["$type", "expense"]}, "$amount", 0]}
+                    }
+                }
+            },
+            {"$sort": {"_id.year": -1, "_id.month": -1}}
         ]
 
-        summary_payload = {
-            "total_incomes": round(total_incomes, 2),
-            "total_expenses": round(total_expenses, 2),
-            "net_savings": round(total_incomes - total_expenses, 2),
-            "chart_data": chart_data
-        }
+        aggregated_results = list(Transaction.objects.aggregate(*pipeline))
 
-        return jsonify(summary_payload), 200
+        chart_data = []
+        global_income = 0
+        global_expense = 0
+
+        # Month mapping 
+        months_map = {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June",
+                      7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"}
+        
+        for res in aggregated_results:
+            m_num = res["_id"]["month"]
+            y_num = res["_id"]["year"]
+            m_name = f"{months_map[m_num]} {y_num}"
+            m_nameNum = f"{y_num}-{m_num:02d}"
+
+            inc = float(res["total_income"])
+            exp = float(res["total_expense"])
+
+            global_income += inc
+            global_expense += exp
+
+            chart_data.append({
+                "name": m_name,
+                "year_month": m_nameNum,
+                "Income": inc,
+                "Expense": exp
+            })
+            
+        return jsonify({
+            "status": "success",
+            "total_incomes": global_income,
+            "total_expenses": global_expense,
+            "chart_data": chart_data
+        }), 200
     
     except Exception as e:
         return jsonify({"error": "Failed to comppile financial metrics."}), 500

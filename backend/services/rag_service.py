@@ -78,7 +78,7 @@ def ingest_document(file_bytes, filename, user_id):
     if not raw_text.strip():
         raise ValueError("Could not extract any readable text from this document.")
     
-    # Split text into 1--- characters segments with a 200 characters overllapping windows
+    # Split text into 1000 characters segments with a 200 characters overllapping windows
     text_splitters = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     chunks = text_splitters.split_text(raw_text)
 
