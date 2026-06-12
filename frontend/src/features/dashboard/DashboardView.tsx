@@ -30,7 +30,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const currentMonthCode = `${currentYear}-${currentMonth}`;
     
     // Find current month summary data
-    const currentMonthData: ChartDataItem = summary?.chart_data?.find(
+    const currentMonthData: ChartDataItem | undefined = summary?.chart_data?.find(
         (item) => item?.year_month === currentMonthCode
     );
     const currentIncomes = currentMonthData ? currentMonthData.Income : 0;
