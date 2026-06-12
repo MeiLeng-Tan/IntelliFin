@@ -88,13 +88,6 @@ export const Layout: React.FC<LayoutProps> = ({ onLogout }) => {
                         IntelliFin
                     </div>
                 </div>
-                {/* *Actions: Notification bell indicator 
-                <div className="flex items-center gap-2">
-                    <button className="p-2 text-gray-400 hover:text-gray-600 rounded-xl relative transition-colors cursor-pointer">
-                        <span className="text-lg">🔔</span>
-                        <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white"></span>
-                    </button>
-                </div> */}
             </header>
             {/* Main application frame */}
             <div className="flex flex-1 overflow-hidden">
@@ -142,7 +135,7 @@ export const Layout: React.FC<LayoutProps> = ({ onLogout }) => {
 
                     {/*Settings button - bottom sidebar */}
                     <div className="space-y-4 pt-4 border-t border-gray-100">
-                        {/** Setting Tab */}
+                        {/* * Setting Tab
                         <button
                             onClick={() => setActiveView("settings")}
                             className={cn(
@@ -154,7 +147,7 @@ export const Layout: React.FC<LayoutProps> = ({ onLogout }) => {
                         >
                             <span className="text-gray-400 group-hover:rotate-45 transition-transform duration-300">⚙️</span> 
                             Settings
-                        </button>
+                        </button> */}
 
                         {/** User profile */}
                         <div className="flex items-center justify-between p-2 rounded-xl bg-gray-50 border border-gray-100">

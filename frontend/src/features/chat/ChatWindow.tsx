@@ -6,6 +6,7 @@ import type { DisplayMessage } from "../../types/chatTypes";
 export const ChatWindow: React.FC = () => {
     const [input, setInput] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
+    const [activeActions, setActiveActions] = useState<string[]>([]);
     
     // Initialize or retrieve a distinct session_id for LangGraph
     const [sessionId] = useState<string>(() => {
@@ -62,11 +63,13 @@ export const ChatWindow: React.FC = () => {
         setMessages(prev => [...prev, userMessage]);
         setInput("");
         setLoading(true);
+        setActiveActions(["Initializing AI agent..."]);
         
         try {
             const data = await sendAgentMessage(userMessage.text, [...messages, userMessage], sessionId);
 
             if (data.status === "success") {
+                setActiveActions(data.actions);
                 setMessages(prev => [...prev, {
                     id: `msg-agent-${Date.now()}`,
                     sender: "ai agent",
@@ -86,6 +89,7 @@ export const ChatWindow: React.FC = () => {
             }]);
         } finally {
             setLoading(false);
+            setActiveActions([])
         }
     };
 
@@ -107,6 +111,25 @@ export const ChatWindow: React.FC = () => {
                                     msg.text
                                 ) : (
                                     <div className="markdown-content space-y-3 text-slate-700">
+                                        {msg.sender === 'ai agent' && msg.actions && msg.actions.length > 0 && (
+                                            <div className="mb-4 space-y-2">
+                                                <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">
+                                                    Execution Steps
+                                                </div>
+                                                <div className="flex flex-col gap-1.5">
+                                                    {msg.actions.map((action, index) => (
+                                                        <div 
+                                                            key={index} 
+                                                            className="flex items-center gap-2 text-[11px] bg-slate-50 border border-slate-200 text-slate-600 px-2 py-1 rounded-md animate-in fade-in slide-in-from-left-1"
+                                                        >
+                                                            <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
+                                                            {action}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <hr className="border-slate-100 my-3" />
+                                            </div>
+                                        )}
                                         <ReactMarkdown 
                                             components={{
                                                 // Custom styling
@@ -133,6 +156,34 @@ export const ChatWindow: React.FC = () => {
                         </div>
                     </div>
                 ))}
+                {/* Dynamic Action Logger */}
+                {loading && activeActions.length > 0 && (
+                    <div className="flex justify-start items-start space-x-3 mb-4 animate-in fade-in duration-500">
+                        <div className="flex flex-col space-y-2 w-full max-w-[80%]">
+                            <div className="bg-slate-100 border border-slate-200 rounded-2xl rounded-tl-none p-3 shadow-sm">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="flex space-x-1">
+                                        <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                                        <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                                        <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce"></span>
+                                    </div>
+                                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-tight">Agent Progress</span>
+                                </div>
+                                
+                                <div className="space-y-1.5">
+                                    {activeActions.map((action, idx) => (
+                                        <div key={idx} className="flex items-center gap-2 text-xs text-slate-600 transition-all">
+                                            <svg className="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            {action}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <div ref={chatEndRef} />
             </div>
 
@@ -141,7 +192,7 @@ export const ChatWindow: React.FC = () => {
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask about allocation updates..."
+                    placeholder="Talk to AI assistant..."
                     disabled={loading}
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 disabled:bg-gray-50"
                 />

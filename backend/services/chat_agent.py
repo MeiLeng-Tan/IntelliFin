@@ -104,7 +104,7 @@ def qeury_financial_cashflow(config: Annotated[RunnableConfig, InjectedToolArg])
     from bson import ObjectId
     try:
         query_id = ObjectId(str(user_id)) if ObjectId.is_valid(str(user_id)) else str(user_id)
-        transactions = Transaction._objects(user_id=query_id)
+        transactions = Transaction.objects(user_id=query_id)
 
         if not transactions:
             return "No transaction history found for this user."
@@ -116,7 +116,7 @@ def qeury_financial_cashflow(config: Annotated[RunnableConfig, InjectedToolArg])
             if t.amount > 0:
                 total_income += t.amount
             else:
-                total_spending +- abs(t.amount)
+                total_spending += abs(t.amount)
 
         net_cashflow = total_income - total_spending
 
@@ -130,7 +130,27 @@ def qeury_financial_cashflow(config: Annotated[RunnableConfig, InjectedToolArg])
     except Exception as e:
         return f"Error accessing transactions: {str(e)}"
 
-tools_list = [search_semantic_history, query_live_portfolio_balances, qeury_financial_cashflow]
+@tool
+def get_transaction_history(days: int = 30, config: Annotated[RunnableConfig, InjectedToolArg] = None) -> str:
+    """
+    Retrieves the actual list of recent transactions (merchant, amount, date).
+    Use this when the user asks about specific purchases or spending patterns.
+    """
+    user_id = config.get("configurable", {}).get("user_id")
+    
+    # Query MongoDB for the actual objects
+    transactions = Transaction.objects(user_id=user_id).order_by('-date').limit(20)
+    
+    if not transactions:
+        return "No recent transactions found."
+
+    results = []
+    for t in transactions:
+        results.append(f"{t.date.strftime('%Y-%m-%d')}: {t.description} {t.category} - ${abs(t.amount)}")
+    
+    return "\n".join(results)
+
+tools_list = [search_semantic_history, query_live_portfolio_balances, qeury_financial_cashflow, get_transaction_history]
 tool_node = ToolNode(tools_list)
 
 model = ChatOpenAI(model="gpt-5.4-mini", temperature=0).bind_tools(tools_list)

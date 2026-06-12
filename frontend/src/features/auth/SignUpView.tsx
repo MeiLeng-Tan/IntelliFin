@@ -62,7 +62,7 @@ export const SignupView: React.FC<SignupViewProps> = ({ onAuthSuccess, onSwitchT
                         <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
                                 First Name
-                            </label>"
+                            </label>
                             <input 
                                 name="first_name"
                                 type="text"
@@ -80,7 +80,7 @@ export const SignupView: React.FC<SignupViewProps> = ({ onAuthSuccess, onSwitchT
                         <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
                                 Last Name
-                            </label>"
+                            </label>
                             <input 
                                 name="last_name"
                                 type="text"
@@ -99,7 +99,7 @@ export const SignupView: React.FC<SignupViewProps> = ({ onAuthSuccess, onSwitchT
                         <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
                                 Email
-                            </label>"
+                            </label>
                             <input 
                                 name="email"
                                 type="email"
@@ -117,7 +117,7 @@ export const SignupView: React.FC<SignupViewProps> = ({ onAuthSuccess, onSwitchT
                         <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
                                 Password
-                            </label>"
+                            </label>
                             <input 
                                 name="password"
                                 type="password"

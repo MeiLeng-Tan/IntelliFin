@@ -66,7 +66,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     </span>
                 </div>
 
-                <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                {/* <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
                     <p className="text-sm text-gray-500 mb-1">AI Goal Track</p>
                     <h2 className="text-3xl font-bold text-gray-900">{savingsGoalPercentage}%</h2>
                     <div className="w-full bg-gray-100 h-2 rounded-full mt-2">
@@ -75,10 +75,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             style={{ width: `${savingsGoalPercentage}%` }}
                         ></div>
                     </div>
-                </div>
+                </div> */}
             </div>
 
-            {/* Insights Block */}
+            {/* Insights Block
             <div className="bg-indigo-600 rounded-2xl p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                     <h3 className="font-semibold text-lg flex items-center gap-2">
@@ -86,7 +86,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     </h3>
                     <p className="text-indigo-100 text-sm max-w-2xl">{aiInsightMessage}</p>
                 </div>
-            </div>
+            </div> */}
 
             {/* Recent transaction ledger and chart */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
