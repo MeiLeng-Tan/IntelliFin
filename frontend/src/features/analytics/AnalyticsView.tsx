@@ -82,9 +82,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
     const displayChartData = monthFilter === "all"
     ? chartData
-    : chartData.filter(item => item.year_month === monthFilter)
+    : chartData.filter(item => item?.year_month === monthFilter)
 
-    const selectedMonthData = chartData.find(item => item.year_month === monthFilter);
+    const selectedMonthData = chartData.find(item => item?.year_month === monthFilter);
 
     const displayTotalIncomes = monthFilter === "all"
     ? totalIncomes
@@ -186,7 +186,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                                     <YAxis dataKey="name" type="category" fontSize={11} tickLine={false} axisLine={false} />
                                     <Tooltip />
                                     <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={30}>
-                                        {categoryData.map((_, index) => (
+                                        {categoryData.map((_: any, index: number) => (
                                             <Cell key={`cell-${index}`} fill={index % 2 === 0 ? "#6366f1" : "#818cf8"} />
                                         ))}
                                     </Bar>
@@ -203,7 +203,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                                 <div className="text-center py-8 text-xs text-gray-400">No transactions recorded for this selected metric profile.</div>
                             ) : (
                                 filteredTransactions.map((t) => (
-                                    <div key={t.transaction_id || t.id} onClick={() => setViewingTransaction(t)} className="flex items-center justify-between py-3 cursor-pointer hover:bg-gray-50/50 px-2 rounded-lg group transition-colors">
+                                    <div key={t.transaction_id} onClick={() => setViewingTransaction(t)} className="flex items-center justify-between py-3 cursor-pointer hover:bg-gray-50/50 px-2 rounded-lg group transition-colors">
                                         <div className="flex flex-col">
                                             <span className="text-xs text-gray-400">{t.date ? new Date(t.date).toLocaleDateString() : ""}</span>
                                             <span className="text-sm font-medium text-gray-900">{t.description}</span>

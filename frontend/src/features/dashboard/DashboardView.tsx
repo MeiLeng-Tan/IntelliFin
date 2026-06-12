@@ -24,7 +24,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     
     // Find current month summary data
     const currentMonthData = summary?.chart_data?.find(
-        (item) => item.year_month === currentMonthCode
+        (item) => item?.year_month === currentMonthCode
     );
     const currentIncomes = currentMonthData ? currentMonthData.Income : 0;
     const currentExpenses = currentMonthData ? currentMonthData.Expense : 0;
